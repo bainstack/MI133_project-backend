@@ -19,6 +19,6 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
-    "sqlite": "^3.0.0"
+    "sqlite3": "^4.0.2"
   }
 }
