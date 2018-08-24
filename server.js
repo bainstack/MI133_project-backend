@@ -3,10 +3,14 @@ var express = require('express');        // call express
 var api = express();                 // define our app using express
 var bodyParser = require('body-parser');    // call body parser
 var sqlite3 = require('sqlite3'); // call sqlite-database
+var cors = require('cors'); // call cors to enable cross-origin fetching
 
-// configure api to use bodyParser()
+// configure api to use bodyParser
 api.use(bodyParser.urlencoded({ extended: true }));
 api.use(bodyParser.json());
+
+// configure api to use cors
+api.use(cors());
 
 // set port
 var port = process.env.PORT || 3000;
