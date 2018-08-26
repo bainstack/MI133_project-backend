@@ -22,7 +22,6 @@ api.get('/trips/:id', (req, res) => {
         if (req.params.id == "all") {
             //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
             var current_dtm = 1506067538;
-            console.log(current_dtm);
             db.all("SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;", current_dtm, function (err, trips) {
                 res.json(trips);
             });
