@@ -21,22 +21,30 @@ var db = new sqlite3.Database('../logbook.db');
 
 app.post('/register', (req, res) => {
     try {
-        if (db.all(`SELECT * FROM members WHERE username != ${req.params.username};`)) {
-            db.all(`INSERT INTO members VALUES (${req.params.first_name}, ${req.params.last_name}, ${req.params.username}, ${req.params.password})`, (err, member) => {
-                res.json(member, "successfully created");
-            });
+        if (db.all(`SELECT * FROM members WHERE username == ${req.params.username} OR (first_name == ${req.params.first_name} AND last_name == ${req.params.last_name});`)) {
+            res(`user ${req.params.username} already exists`);
         }
         else {
-            res.json(member, "already exists");
+            db.all(`INSERT INTO members VALUES (${req.params.first_name}, ${req.params.last_name}, ${req.params.username}, ${req.params.password});`, (err, member) => {
+                res(member, `${req.params.username}successfully created`);
+            });
         }
-    }
-    catch (err) {
+    } catch (err) {
         res.json(err);
     }
 });
 
 app.post('/login', (req, res) => {
+    try {
+        if (db.all(`SELECT * FROM members WHERE username == ${req.params.username} AND password == ${req.params.password};`)) {
 
+        }
+        else {
+            res(`login failed`);
+        }
+    } catch (err) {
+        res.json(err);
+    }
 });
 
 app.get('/trips/:id', (req, res) => {
@@ -60,37 +68,34 @@ app.get('/trips/:id', (req, res) => {
 
 app.post('/trips/:id', (req, res) => {
     try {
-        db.all(`INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (${req.params.boat_id}, ${req.params.crew_id}, ${req.params.latitude}, ${req.params.longitude}, ${req.params.departure}, ${req.params.arrival})`, function (err, trips) {
+        db.all(`INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (${req.params.boat_id}, ${req.params.crew_id}, ${req.params.latitude}, ${req.params.longitude}, ${req.params.departure}, ${req.params.arrival});`, function (err, trips) {
             res.json(trips);
         });
-    }
-    catch (err) {
+    } catch (err) {
         res.json(err);
     }
 });
 
 app.post('/members/:first_name&last_name', (req, res) => {
     try {
-        db.all(`INSERT INTO members (first_name, last_name) VALUES (${req.params.first_name}, ${req.params.last_name})`, (err, member) => {
+        db.all(`INSERT INTO members (first_name, last_name) VALUES (${req.params.first_name}, ${req.params.last_name});`, (err, member) => {
             res.json(member, crew);
         });
-        db.all(`INSERT INTO crews (id, member_id) VALUES (${req.params.id}, ${req.params.member_id})`, (err, crew) => {
+        db.all(`INSERT INTO crews (id, member_id) VALUES (${req.params.id}, ${req.params.member_id});`, (err, crew) => {
             res.json(member, crew);
         });
-    }
-    catch (err) {
+    } catch (err) {
         res.json(err);
     }
 });
 
 app.post('/boats/:boat_name', (req, res) => {
     try {
-        db.all(`INSERT INTO boats (boat_name, boat_size) VALUES (${req.params.boat_name}, ${req.params.boat_size})`, (err, boat_name) => {
+        db.all(`INSERT INTO boats (boat_name, boat_size) VALUES (${req.params.boat_name}, ${req.params.boat_size});`, (err, boat_name) => {
             console.log(boat_name);
         });
         res.json(boat_name);
-    }
-    catch (err) {
+    } catch (err) {
         res.json(err);
     }
 });
