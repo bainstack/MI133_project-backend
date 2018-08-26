@@ -19,6 +19,9 @@ const port = 3000;
 // open connection to database
 var db = new sqlite3.Database('../logbook.db');
 
+// start server
+server.listen(port, () => console.log(`Listening on port ${port}`))
+
 app.post('/register', (req, res) => {
     try {
         if (db.all(`SELECT * FROM members WHERE username == ${req.params.username} OR (first_name == ${req.params.first_name} AND last_name == ${req.params.last_name});`)) {
@@ -37,68 +40,69 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
     try {
         if (db.all(`SELECT * FROM members WHERE username == ${req.params.username} AND password == ${req.params.password};`)) {
+            io.on('connection', (socket) => {
+                console.log('New client connected');
 
+                socket.on('view trips', (id) => {
+                    try {
+                        if (id == "all") {
+                            //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
+                            let current_dtm = 1506067538;
+                            db.all(`SELECT * FROM trips, crews, boats, members WHERE (departure >= ${current_dtm} ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;`, function (err, trips) {
+                                socket.emit(json(trips));
+                            });
+                        }
+                        else {
+                            db.all(`SELECT * FROM trips, crews, boats, members WHERE (trips.id = ${id}) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;`, function (err, trips) {
+                                socket.emit(json(trips));
+                            });
+                        }
+                    } catch (err) {
+                        socket.emit(json(err));
+                    };
+                });
+
+                socket.on('create trip', (boat_id, crew_id, latitude, longitude, departure, arrival) => {
+                    try {
+                        db.all(`INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (${boat_id}, ${crew_id}, ${latitude}, ${longitude}, ${departure}, ${arrival});`, (err, trips) => {
+                            io.sockets.emit(trips);
+                        });
+                    } catch (err) {
+                        socket.emit(json(err));
+                    }
+                });
+
+                socket.on('join trip', (crew_id, member_id) => {
+                    try {
+                        db.all(`INSERT INTO crews (id, member_id) VALUES (${crew_id}, ${member_id});`, (err, trips) => {
+                            io.sockets.emit(trips);
+                        });
+                    } catch (err) {
+                        socket.emit(json(err));
+                    }
+                });
+
+                socket.on('create boat', (boat_name, boat_size) => {
+                    try {
+                        db.all(`INSERT INTO boats (boat_name, boat_size) VALUES (${boat_name}, ${boat_size});`, (err, boat) => {
+                            io.sockets.emit(boats);
+                        });
+                    } catch (err) {
+                        socket.emit(json(err));
+                    }
+                });
+
+                // disconnect is fired when a client leaves the server
+                socket.on('disconnect', () => {
+                    console.log('user disconnected')
+                });
+            });
         }
         else {
             res(`login failed`);
-        }
+        };
     } catch (err) {
         res.json(err);
-    }
+    };
 });
 
-app.get('/trips/:id', (req, res) => {
-    try {
-        if (req.params.id == "all") {
-            //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
-            let current_dtm = 1506067538;
-            db.all(`SELECT * FROM trips, crews, boats, members WHERE (departure >= ${current_dtm} ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;`, function (err, trips) {
-                res.json(trips);
-            });
-        }
-        else {
-            db.all(`SELECT * FROM trips, crews, boats, members WHERE (trips.id = ${req.params.id}) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;`, function (err, trips) {
-                res.json(trips);
-            });
-        }
-    } catch (err) {
-        res.json(err);
-    }
-});
-
-app.post('/trips/:id', (req, res) => {
-    try {
-        db.all(`INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (${req.params.boat_id}, ${req.params.crew_id}, ${req.params.latitude}, ${req.params.longitude}, ${req.params.departure}, ${req.params.arrival});`, function (err, trips) {
-            res.json(trips);
-        });
-    } catch (err) {
-        res.json(err);
-    }
-});
-
-app.post('/members/:first_name&last_name', (req, res) => {
-    try {
-        db.all(`INSERT INTO members (first_name, last_name) VALUES (${req.params.first_name}, ${req.params.last_name});`, (err, member) => {
-            res.json(member, crew);
-        });
-        db.all(`INSERT INTO crews (id, member_id) VALUES (${req.params.id}, ${req.params.member_id});`, (err, crew) => {
-            res.json(member, crew);
-        });
-    } catch (err) {
-        res.json(err);
-    }
-});
-
-app.post('/boats/:boat_name', (req, res) => {
-    try {
-        db.all(`INSERT INTO boats (boat_name, boat_size) VALUES (${req.params.boat_name}, ${req.params.boat_size});`, (err, boat_name) => {
-            console.log(boat_name);
-        });
-        res.json(boat_name);
-    } catch (err) {
-        res.json(err);
-    }
-});
-
-// start server
-server.listen(port, () => console.log(`Listening on port ${port}`))
