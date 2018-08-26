@@ -17,7 +17,7 @@ var port = process.env.PORT || 3000;
 // open connection to database
 var db = new sqlite3.Database('../logbook.db');
 
-app.post('/login', (req, res) => {
+app.post('/register', (req, res) => {
     try {
         if (db.all("SELECT * FROM members WHERE username != ?;", req.params.username)) {
             db.all('INSERT INTO members VALUES (?, ?, ?, ?)', req.params.first_name, req.params.last_name, req.params.username, req.params.password, (err, member) => {
