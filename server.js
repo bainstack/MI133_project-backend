@@ -20,12 +20,15 @@ var db = new sqlite3.Database('../logbook.db');
 api.get('/trips/:id', (req, res) => {
     try {
         if (req.params.id == "all") {
-            db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id);', function (err, trips) {
+            //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
+            var current_dtm = 1506067538;
+            console.log(current_dtm);
+            db.all("SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;", current_dtm, function (err, trips) {
                 res.json(trips);
             });
         }
         else {
-            db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id);', req.params.id, function (err, trips) {
+            db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', req.params.id, function (err, trips) {
                 res.json(trips);
             });
         }
