@@ -1,9 +1,11 @@
 // call needed packages
-var express = require('express');        // call express
-var app = express();                 // define our app using express
-var bodyParser = require('body-parser');    // call body parser
-var sqlite3 = require('sqlite3'); // call sqlite-database
-var cors = require('cors'); // call cors to enable cross-origin fetching
+const express = require('express'),        // call express
+    app = express(),                 // define our app using express
+    bodyParser = require('body-parser'),    // call body parser
+    sqlite3 = require('sqlite3'), // call sqlite-database
+    cors = require('cors'), // call cors to enable cross-origin fetching
+    server = require('http').Server(app), // add http to the server
+    io = require('socket.io')(server); //add socket.io to the server
 
 // configure app to use bodyParser
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -13,14 +15,14 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // set port
-var port = process.env.PORT || 3000;
+const port = 3000;
 // open connection to database
 var db = new sqlite3.Database('../logbook.db');
 
 app.post('/register', (req, res) => {
     try {
-        if (db.all("SELECT * FROM members WHERE username != ?;", req.params.username)) {
-            db.all('INSERT INTO members VALUES (?, ?, ?, ?)', req.params.first_name, req.params.last_name, req.params.username, req.params.password, (err, member) => {
+        if (db.all(`SELECT * FROM members WHERE username != ${req.params.username};`)) {
+            db.all(`INSERT INTO members VALUES (${req.params.first_name}, ${req.params.last_name}, ${req.params.username}, ${req.params.password})`, (err, member) => {
                 res.json(member, "successfully created");
             });
         }
@@ -33,17 +35,21 @@ app.post('/register', (req, res) => {
     }
 });
 
+app.post('/login', (req, res) => {
+
+});
+
 app.get('/trips/:id', (req, res) => {
     try {
         if (req.params.id == "all") {
             //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
-            var current_dtm = 1506067538;
-            db.all("SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;", current_dtm, function (err, trips) {
+            let current_dtm = 1506067538;
+            db.all(`SELECT * FROM trips, crews, boats, members WHERE (departure >= ${current_dtm} ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;`, function (err, trips) {
                 res.json(trips);
             });
         }
         else {
-            db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', req.params.id, function (err, trips) {
+            db.all(`SELECT * FROM trips, crews, boats, members WHERE (trips.id = ${req.params.id}) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;`, function (err, trips) {
                 res.json(trips);
             });
         }
@@ -54,7 +60,7 @@ app.get('/trips/:id', (req, res) => {
 
 app.post('/trips/:id', (req, res) => {
     try {
-        db.all('INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?, ?)', req.params.boat_id, req.params.crew_id, req.params.latitude, req.params.longitude, req.params.departure, req.params.arrival, function (err, trips) {
+        db.all(`INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (${req.params.boat_id}, ${req.params.crew_id}, ${req.params.latitude}, ${req.params.longitude}, ${req.params.departure}, ${req.params.arrival})`, function (err, trips) {
             res.json(trips);
         });
     }
@@ -65,10 +71,10 @@ app.post('/trips/:id', (req, res) => {
 
 app.post('/members/:first_name&last_name', (req, res) => {
     try {
-        db.all('INSERT INTO members (first_name, last_name) VALUES (?, ?)', req.params.first_name, req.params.last_name, (err, member) => {
+        db.all(`INSERT INTO members (first_name, last_name) VALUES (${req.params.first_name}, ${req.params.last_name})`, (err, member) => {
             res.json(member, crew);
         });
-        db.all('INSERT INTO crews (id, member_id) VALUES (?, ?)', req.params.id, req.params.member_id, (err, crew) => {
+        db.all(`INSERT INTO crews (id, member_id) VALUES (${req.params.id}, ${req.params.member_id})`, (err, crew) => {
             res.json(member, crew);
         });
     }
@@ -79,7 +85,7 @@ app.post('/members/:first_name&last_name', (req, res) => {
 
 app.post('/boats/:boat_name', (req, res) => {
     try {
-        db.all('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?)', req.params.boat_name, req.params.boat_size, (err, boat_name) => {
+        db.all(`INSERT INTO boats (boat_name, boat_size) VALUES (${req.params.boat_name}, ${req.params.boat_size})`, (err, boat_name) => {
             console.log(boat_name);
         });
         res.json(boat_name);
@@ -90,5 +96,4 @@ app.post('/boats/:boat_name', (req, res) => {
 });
 
 // start server
-app.listen(port);
-console.log('pssst... app is listening on port: ' + port);
+server.listen(port, () => console.log(`Listening on port ${port}`))
