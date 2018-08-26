@@ -1,23 +1,39 @@
 // call needed packages
 var express = require('express');        // call express
-var api = express();                 // define our app using express
+var app = express();                 // define our app using express
 var bodyParser = require('body-parser');    // call body parser
 var sqlite3 = require('sqlite3'); // call sqlite-database
 var cors = require('cors'); // call cors to enable cross-origin fetching
 
-// configure api to use bodyParser
-api.use(bodyParser.urlencoded({ extended: true }));
-api.use(bodyParser.json());
+// configure app to use bodyParser
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-// configure api to use cors
-api.use(cors());
+// configure app to use cors
+app.use(cors());
 
 // set port
 var port = process.env.PORT || 3000;
 // open connection to database
 var db = new sqlite3.Database('../logbook.db');
 
-api.get('/trips/:id', (req, res) => {
+app.post('/login', (req, res) => {
+    try {
+        if (db.all("SELECT * FROM members WHERE username != ?;", req.params.username)) {
+            db.all('INSERT INTO members VALUES (?, ?, ?, ?)', req.params.first_name, req.params.last_name, req.params.username, req.params.password, (err, member) => {
+                res.json(member, "successfully created");
+            });
+        }
+        else {
+            res.json(member, "already exists");
+        }
+    }
+    catch (err) {
+        res.json(err);
+    }
+});
+
+app.get('/trips/:id', (req, res) => {
     try {
         if (req.params.id == "all") {
             //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
@@ -36,7 +52,7 @@ api.get('/trips/:id', (req, res) => {
     }
 });
 
-api.post('/trips/:id', (req, res) => {
+app.post('/trips/:id', (req, res) => {
     try {
         db.all('INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?, ?)', req.params.boat_id, req.params.crew_id, req.params.latitude, req.params.longitude, req.params.departure, req.params.arrival, function (err, trips) {
             res.json(trips);
@@ -47,7 +63,7 @@ api.post('/trips/:id', (req, res) => {
     }
 });
 
-api.post('/members/:first_name&last_name', (req, res) => {
+app.post('/members/:first_name&last_name', (req, res) => {
     try {
         db.all('INSERT INTO members (first_name, last_name) VALUES (?, ?)', req.params.first_name, req.params.last_name, (err, member) => {
             res.json(member, crew);
@@ -61,7 +77,7 @@ api.post('/members/:first_name&last_name', (req, res) => {
     }
 });
 
-api.post('/boats/:boat_name', (req, res) => {
+app.post('/boats/:boat_name', (req, res) => {
     try {
         db.all('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?)', req.params.boat_name, req.params.boat_size, (err, boat_name) => {
             console.log(boat_name);
@@ -74,5 +90,5 @@ api.post('/boats/:boat_name', (req, res) => {
 });
 
 // start server
-api.listen(port);
-console.log('pssst... API is listening on port: ' + port);
+app.listen(port);
+console.log('pssst... app is listening on port: ' + port);
