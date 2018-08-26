@@ -24,12 +24,12 @@ server.listen(port, () => console.log(`Listening on port ${port}`));
 
 app.post('/register', (req, res) => {
     try {
-        if (db.all('SELECT * FROM members WHERE username == ${req.body.username} OR (first_name == ${req.body.first_name} AND last_name == ${req.body.last_name});')) {
-            res('user ${req.body.username} already exists');
+        if (db.get('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?);', username, first_name, last_name)) {
+            res(`user ${req.body.username} already exists`);
         }
         else {
-            db.all('INSERT INTO members VALUES (${req.body.first_name}, ${req.body.last_name}, ${req.body.username}, ${req.body.password});', (err, member) => {
-                res(member, '${req.body.username}successfully created');
+            db.all('INSERT INTO members VALUES (?, ?, ?, ?);', username, first_name, last_name, password, (err, member) => {
+                res(`${req.body.username} successfully created`);
             });
         }
     } catch (err) {
