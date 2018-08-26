@@ -20,16 +20,16 @@ const port = 3000;
 var db = new sqlite3.Database('../logbook.db');
 
 // start server
-server.listen(port, () => console.log(`Listening on port ${port}`))
+server.listen(port, () => console.log(`Listening on port ${port}`));
 
 app.post('/register', (req, res) => {
     try {
-        if (db.all(`SELECT * FROM members WHERE username == ${req.params.username} OR (first_name == ${req.params.first_name} AND last_name == ${req.params.last_name});`)) {
-            res(`user ${req.params.username} already exists`);
+        if (db.all('SELECT * FROM members WHERE username == ${req.body.username} OR (first_name == ${req.body.first_name} AND last_name == ${req.body.last_name});')) {
+            res('user ${req.body.username} already exists');
         }
         else {
-            db.all(`INSERT INTO members VALUES (${req.params.first_name}, ${req.params.last_name}, ${req.params.username}, ${req.params.password});`, (err, member) => {
-                res(member, `${req.params.username}successfully created`);
+            db.all('INSERT INTO members VALUES (${req.body.first_name}, ${req.body.last_name}, ${req.body.username}, ${req.body.password});', (err, member) => {
+                res(member, '${req.body.username}successfully created');
             });
         }
     } catch (err) {
@@ -39,7 +39,7 @@ app.post('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
     try {
-        if (db.all(`SELECT * FROM members WHERE username == ${req.params.username} AND password == ${req.params.password};`)) {
+        if (db.get('SELECT * FROM members WHERE username == ? AND password == ?;', req.body.username, req.body.password)) {
             io.on('connection', (socket) => {
                 console.log('New client connected');
 
@@ -48,12 +48,12 @@ app.post('/login', (req, res) => {
                         if (id == "all") {
                             //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
                             let current_dtm = 1506067538;
-                            db.all(`SELECT * FROM trips, crews, boats, members WHERE (departure >= ${current_dtm} ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;`, function (err, trips) {
+                            db.all('SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;', current_dtm, function (err, trips) {
                                 socket.emit(json(trips));
                             });
                         }
                         else {
-                            db.all(`SELECT * FROM trips, crews, boats, members WHERE (trips.id = ${id}) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;`, function (err, trips) {
+                            db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', id, function (err, trips) {
                                 socket.emit(json(trips));
                             });
                         }
@@ -64,7 +64,7 @@ app.post('/login', (req, res) => {
 
                 socket.on('create trip', (boat_id, crew_id, latitude, longitude, departure, arrival) => {
                     try {
-                        db.all(`INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (${boat_id}, ${crew_id}, ${latitude}, ${longitude}, ${departure}, ${arrival});`, (err, trips) => {
+                        db.all('INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?, ?);', boat_id, crew_id, latitude, longitude, departure, arrival, (err, trips) => {
                             io.sockets.emit(trips);
                         });
                     } catch (err) {
@@ -74,7 +74,7 @@ app.post('/login', (req, res) => {
 
                 socket.on('join trip', (crew_id, member_id) => {
                     try {
-                        db.all(`INSERT INTO crews (id, member_id) VALUES (${crew_id}, ${member_id});`, (err, trips) => {
+                        db.all('INSERT INTO crews (id, member_id) VALUES (?, ?);', crew_id, member_id, (err, trips) => {
                             io.sockets.emit(trips);
                         });
                     } catch (err) {
@@ -84,7 +84,7 @@ app.post('/login', (req, res) => {
 
                 socket.on('create boat', (boat_name, boat_size) => {
                     try {
-                        db.all(`INSERT INTO boats (boat_name, boat_size) VALUES (${boat_name}, ${boat_size});`, (err, boat) => {
+                        db.all('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?);', boat_name, boat_size, (err, boat) => {
                             io.sockets.emit(boats);
                         });
                     } catch (err) {
@@ -99,7 +99,7 @@ app.post('/login', (req, res) => {
             });
         }
         else {
-            res(`login failed`);
+            res('login failed');
         };
     } catch (err) {
         res.json(err);
