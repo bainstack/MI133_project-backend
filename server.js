@@ -65,7 +65,7 @@ app.post('/login', (req, res) => {
                 socket.on('create trip', (boat_id, crew_id, latitude, longitude, departure, arrival) => {
                     try {
                         db.all('INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?, ?);', boat_id, crew_id, latitude, longitude, departure, arrival, (err, trips) => {
-                            io.sockets.emit(trips);
+                            io.emit(trips);
                         });
                     } catch (err) {
                         socket.emit(json(err));
@@ -75,7 +75,7 @@ app.post('/login', (req, res) => {
                 socket.on('join trip', (crew_id, member_id) => {
                     try {
                         db.all('INSERT INTO crews (id, member_id) VALUES (?, ?);', crew_id, member_id, (err, trips) => {
-                            io.sockets.emit(trips);
+                            io.emit(trips);
                         });
                     } catch (err) {
                         socket.emit(json(err));
@@ -85,7 +85,7 @@ app.post('/login', (req, res) => {
                 socket.on('create boat', (boat_name, boat_size) => {
                     try {
                         db.all('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?);', boat_name, boat_size, (err, boat) => {
-                            io.sockets.emit(boats);
+                            io.emit(boats);
                         });
                     } catch (err) {
                         socket.emit(json(err));
