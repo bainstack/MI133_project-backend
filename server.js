@@ -1,7 +1,8 @@
 // call needed packages
-var express = require('express'),        // call express
+let express = require('express'),        // call express
     cors = require('cors'), // call cors to enable cross-origin fetching
     app = express(),                 // define our app using express
+    cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),    // call body parser
     sqlite3 = require('sqlite3').verbose(), // call sqlite-database
     server = require('http').Server(app), // add http to the server
@@ -9,8 +10,14 @@ var express = require('express'),        // call express
     ;
 
 // configure app to use cors
-app.use(cors());
+var corsOption = {
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+};
+app.use(cors(corsOption));
 
+app.use(cookieParser());
 // configure app to use bodyParser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
