@@ -1,19 +1,20 @@
 // call needed packages
-const express = require('express'),        // call express
+var express = require('express'),        // call express
+    cors = require('cors'), // call cors to enable cross-origin fetching
     app = express(),                 // define our app using express
     bodyParser = require('body-parser'),    // call body parser
     sqlite3 = require('sqlite3').verbose(), // call sqlite-database
-    cors = require('cors'), // call cors to enable cross-origin fetching
     server = require('http').Server(app), // add http to the server
-    passport = require('passport'),
-    LocalStrategy = require('passport-local').Strategy // call passport with local strategy for usage of db-entries
+    passport = require('passport'), LocalStrategy = require('passport-local').Strategy // call passport with local strategy for usage of db-entries
     ;
+
+// configure app to use cors
+app.use(cors());
 
 // configure app to use bodyParser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-// configure app to use cors
-app.use(cors());
+
 // configure app to use passport
 app.use(passport.initialize());
 app.use(passport.session());
