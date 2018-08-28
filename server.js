@@ -76,7 +76,7 @@ passport.deserializeUser(function (user, done) {
 });
 
 app.post('/register', (req, res) => {
-    db.get('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, req.body.password, (err, row) => {
+    db.get('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, (err, row) => {
         if (err) {
             console.log(err);
             return (res.send(err.message));
@@ -87,7 +87,7 @@ app.post('/register', (req, res) => {
         }
         else {
             console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
-            db.all('INSERT INTO members VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, password)
+            db.all('INSERT INTO members VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password)
             return res.send(`${req.body.username} successfully created`);
         }
     })
@@ -95,7 +95,7 @@ app.post('/register', (req, res) => {
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
     console.log('New client connected');
-    res.send('Successfully logged in!');
+    res.json('Successfully logged in!');
 });
 
 app.get('/view_trips', passport.authenticate('local'), (req, res) => {
