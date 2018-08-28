@@ -94,7 +94,7 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
-    console.log('User' + req.body.username + ' connected');
+    console.log('User ' + req.body.username + ' connected');
     res.send(JSON.stringify({ message: 'Successfully logged in!' }));
 });
 
