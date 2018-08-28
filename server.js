@@ -62,13 +62,21 @@ passport.use(new LocalStrategy(
             if (!user) {
                 return done(null, false, { message: 'Incorrect username.' });
             }
-            if (!user.validPassword(password)) {
+            if (!password) {
                 return done(null, false, { message: 'Incorrect password.' });
             }
             return done(null, user);
         });
     }
 ));
+
+passport.serializeUser(function (user, done) {
+    done(null, user);
+});
+
+passport.deserializeUser(function (user, done) {
+    done(null, user);
+});
 
 app.post('/register', (req, res) => {
     db.get('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, (err, row) => {
