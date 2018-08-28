@@ -84,6 +84,7 @@ app.post('/register', (req, res) => {
             return (res.send(`user ${req.body.username} already exists`));
         }
         else {
+            console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
             db.all('INSERT INTO members VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, password)
             return res.send(`${req.body.username} successfully created`);
         }
