@@ -22,17 +22,19 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 app.use(passport.session());
 
-// set por
+// set port
 const port = 3000;
 // open connection to database
 const db_path = path.resolve(__dirname, '../logbook.db');
-console.log(db_path);
 let db = new sqlite3.Database(db_path, (err) => {
     if (err) {
         return console.error(err.message);
     }
     console.log('Connected to the logbook SQlite database.');
 });
+
+// start server
+server.listen(port, () => console.log(`Listening on port ${port}`));
 
 /*db.get('SELECT * FROM members', (err, row) => {
     if (err) {
