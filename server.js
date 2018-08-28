@@ -94,8 +94,8 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
-    console.log('New client connected');
-    res.send('Successfully logged in!');
+    console.log('User' + req.body.username + ' connected');
+    res.send(JSON.stringify({ message: 'Successfully logged in!' }));
 });
 
 app.get('/view_trips', passport.authenticate('local'), (req, res) => {
