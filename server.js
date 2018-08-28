@@ -6,16 +6,12 @@ let express = require('express'),        // call express
     bodyParser = require('body-parser'),    // call body parser
     sqlite3 = require('sqlite3').verbose(), // call sqlite-database
     server = require('http').Server(app), // add http to the server
-    passport = require('passport'), LocalStrategy = require('passport-local').Strategy // call passport with local strategy for usage of db-entries
+    passport = require('passport'), LocalStrategy = require('passport-local').Strategy, // call passport with local strategy for usage of db-entries
+    path = require('path') //use path module for cross-os-usage of nodejs app
     ;
 
-// configure app to use cors
-var corsOption = {
-    origin: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-};
-app.use(cors(corsOption));
+// configure app to enable cors
+app.use(cors());
 
 app.use(cookieParser());
 // configure app to use bodyParser
@@ -26,18 +22,17 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 app.use(passport.session());
 
-// set port
+// set por
 const port = 3000;
 // open connection to database
-let db = new sqlite3.Database('../logbook.db', (err) => {
+const db_path = path.resolve(__dirname, '../logbook.db');
+console.log(db_path);
+let db = new sqlite3.Database(db_path, (err) => {
     if (err) {
         return console.error(err.message);
     }
     console.log('Connected to the logbook SQlite database.');
 });
-
-// start server
-server.listen(port, () => console.log(`Listening on port ${port}`));
 
 /*db.get('SELECT * FROM members', (err, row) => {
     if (err) {
