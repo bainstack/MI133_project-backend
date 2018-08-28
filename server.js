@@ -76,7 +76,7 @@ passport.deserializeUser(function (user, done) {
 });
 
 app.post('/register', (req, res) => {
-    db.get('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, (err, row) => {
+    db.get('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, req.body.password, (err, row) => {
         if (err) {
             return (res.send(err.message));
         }
