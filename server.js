@@ -87,7 +87,7 @@ app.post('/register', (req, res) => {
         }
         else {
             console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
-            db.all('INSERT INTO members VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password)
+            db.all('INSERT INTO members (username, first_name, last_name, password) VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password)
             return res.send(`${req.body.username} successfully created`);
         }
     })
@@ -95,7 +95,7 @@ app.post('/register', (req, res) => {
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
     console.log('New client connected');
-    res.json('Successfully logged in!');
+    res.send('Successfully logged in!');
 });
 
 app.get('/view_trips', passport.authenticate('local'), (req, res) => {
