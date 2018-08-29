@@ -70,13 +70,13 @@ app.post('/register', (req, res) => {
         }
         if (row) {
             console.log(row);
-            return res.send(`user ${req.body.username} already exists`);
+            return res.json({ success: 'true', message: `User ${req.body.username} already exists!` });
         }
         else {
             console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
             db.all('INSERT INTO members (username, first_name, last_name, password) VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password);
             console.log('Registered new user: ' + req.body.username);
-            return res.send(`${req.body.username} successfully created`);
+            return res.json({ success: 'true', message: `${req.body.username} successfully created` });
         }
     })
 });
@@ -92,10 +92,10 @@ app.get('/view_trips', passport.authenticate('local'), (req, res) => {
         let current_dtm = 1506067538;
         db.all('SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;', current_dtm, (err, trips) => {
             if (err) {
-                return res.send(err.message);
+                return res.json(err.message);
             }
             if (row) {
-                res.send(trips);
+                res.json(trips);
             }
             else {
                 console.log('no trips found')
@@ -105,10 +105,10 @@ app.get('/view_trips', passport.authenticate('local'), (req, res) => {
     else {
         db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', id, function (err, trip) {
             if (err) {
-                return res.send(err.message);
+                return res.json(err.message);
             }
             if (row) {
-                res.send(trip);
+                res.json(trip);
             }
             else {
                 console.log('trip not found')
@@ -120,10 +120,10 @@ app.get('/view_trips', passport.authenticate('local'), (req, res) => {
 app.post('/create_trip', passport.authenticate('local'), (req, res) => {
     db.all('INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?, ?);', req.body.boat_id, req.body.crew_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err, trip) => {
         if (err) {
-            return res.send(err.message);
+            return res.json(err.message);
         }
         if (row) {
-            res.send(trip);
+            res.json(trip);
         }
         else {
             console.log("trip couldn't get created")
@@ -134,10 +134,10 @@ app.post('/create_trip', passport.authenticate('local'), (req, res) => {
 app.post('/join trip', (req, res) => {
     db.all('INSERT INTO crews (id, member_id) VALUES (?, ?);', req.body.crew_id, req.body.member_id, (err, trip) => {
         if (err) {
-            return res.send(err.message);
+            return res.json(err.message);
         }
         if (row) {
-            res.send(trip);
+            res.json(trip);
         }
         else {
             console.log("trip couldn't get created")
@@ -148,10 +148,10 @@ app.post('/join trip', (req, res) => {
 app.post('/create_boat', (req, res) => {
     db.all('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?);', req.body.boat_name, req.body.boat_size, (err, boat) => {
         if (err) {
-            return res.send(err.message);
+            return res.json(err.message);
         }
         if (row) {
-            res.send(boat);
+            res.json(boat);
         }
         else {
             console.log("boat couldn't get created")
