@@ -74,7 +74,8 @@ app.post('/register', (req, res) => {
         }
         else {
             console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
-            db.all('INSERT INTO members (username, first_name, last_name, password) VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password)
+            db.all('INSERT INTO members (username, first_name, last_name, password) VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password);
+            console.log('Registered new user: ' + req.body.username);
             return res.send(`${req.body.username} successfully created`);
         }
     })
