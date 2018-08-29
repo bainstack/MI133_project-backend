@@ -66,11 +66,11 @@ app.post('/register', (req, res) => {
     db.get('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, (err, row) => {
         if (err) {
             console.log(err);
-            return (res.send(err.message));
+            return res.send(err.message);
         }
         if (row) {
             console.log(row);
-            return (res.send(`user ${req.body.username} already exists`));
+            return res.send(`user ${req.body.username} already exists`);
         }
         else {
             console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
