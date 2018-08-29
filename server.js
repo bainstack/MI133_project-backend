@@ -36,19 +36,6 @@ let db = new sqlite3.Database(db_path, (err) => {
 // start server
 server.listen(port, () => console.log(`Listening on port ${port}`));
 
-/*db.get('SELECT * FROM members', (err, row) => {
-    if (err) {
-        return console.error(err.message);
-    }
-    if (row) {
-        console.log(row)
-    }
-    else {
-        console.log(`No playlist found`)
-    };
-
-});*/
-
 passport.use(new LocalStrategy(
     (username, password, done) => {
         db.get('SELECT * FROM members WHERE username == ? AND password == ?;', username, password, (err, user) => {
@@ -95,7 +82,7 @@ app.post('/register', (req, res) => {
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
     console.log('User ' + req.body.username + ' connected');
-    res.send(JSON.stringify({ message: 'Successfully logged in!' }));
+    res.send(JSON.stringify({ message: 'Congrats ' + req.body.username + '! You logged in successfully!' }));
 });
 
 app.get('/view_trips', passport.authenticate('local'), (req, res) => {
