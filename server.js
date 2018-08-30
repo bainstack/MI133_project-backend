@@ -68,7 +68,7 @@ app.post('/register', (req, res) => {
             console.log(err);
             return res.send(err.message);
         }
-        if (row) {
+        if (user) {
             console.log(user);
             return res.json({ success: 'false', message: `User ${req.body.username} already exists!` });
         }
@@ -94,7 +94,7 @@ app.get('/view_trips', passport.authenticate('local'), (req, res) => {
             if (err) {
                 return res.json(err.message);
             }
-            if (row) {
+            if (trips) {
                 return res.json({ success: 'true', trips });
             }
             else {
