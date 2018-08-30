@@ -146,6 +146,15 @@ app.post('/join trip', (req, res) => {
     });
 });
 
+app.get('/get_boats', passport.authenticate('local'), (req, res) => {
+    db.all('SELECT * FROM boats;', (err, boat) => {
+        if (err) {
+            return res.json(err.message);
+        }
+        return res.json(boat);
+    });
+});
+
 app.post('/create_boat', (req, res) => {
     db.all('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?);', req.body.boat_name, req.body.boat_size, (err, boat) => {
         if (err) {
