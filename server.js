@@ -70,13 +70,13 @@ app.post('/register', (req, res) => {
         }
         if (user) {
             console.log(user);
-            return res.json({ success: 'false', message: `User ${req.body.username} already exists!` });
+            return res.json({ success: false, message: `User ${req.body.username} already exists!` });
         }
         else {
             console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
             db.all('INSERT INTO members (username, first_name, last_name, password) VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password);
             console.log('Registered new user: ' + req.body.username);
-            return res.json({ success: 'true', message: `${req.body.username} successfully created` });
+            return res.json({ success: true, message: `${req.body.username} successfully created` });
         }
     })
 });
@@ -95,11 +95,11 @@ app.get('/view_trips', passport.authenticate('local'), (req, res) => {
                 return res.json(err.message);
             }
             if (trips) {
-                return res.json({ success: 'true', trips });
+                return res.json({ success: true, trips });
             }
             else {
                 console.log('no trips found');
-                return res.json({ success: 'false', message: `No trips found` });
+                return res.json({ success: false, message: `No trips found` });
             };
         });
     }
@@ -109,10 +109,10 @@ app.get('/view_trips', passport.authenticate('local'), (req, res) => {
                 return res.json(err.message);
             }
             if (trip) {
-                return res.json({ success: 'true', trip });
+                return res.json({ success: true, trip });
             }
             else {
-                return res.json({ success: 'false', message: `trip not found` });
+                return res.json({ success: false, message: `trip not found` });
             };
         });
     }
@@ -124,10 +124,10 @@ app.post('/create_trip', passport.authenticate('local'), (req, res) => {
             return res.json(err.message);
         }
         if (trip) {
-            return res.json({ success: 'true', trip });
+            return res.json({ success: true, trip });
         }
         else {
-            return res.json({ success: 'false', message: `trip couldnt't be created` });
+            return res.json({ success: false, message: `trip couldnt't be created` });
         };
     });
 });
@@ -138,10 +138,10 @@ app.post('/join trip', (req, res) => {
             return res.json(err.message);
         }
         if (trip) {
-            return res.json({ success: 'true', trip });
+            return res.json({ success: true, trip });
         }
         else {
-            return res.json({ success: 'false', message: `couldn't join trip` });
+            return res.json({ success: false, message: `couldn't join trip` });
         };
     });
 });
@@ -152,10 +152,10 @@ app.post('/create_boat', (req, res) => {
             return res.json(err.message);
         }
         if (boat) {
-            return res.json({ success: 'true', boat });
+            return res.json({ success: true, boat });
         }
         else {
-            return res.json({ success: 'false', message: `boat couldn't get created` });
+            return res.json({ success: false, message: `boat couldn't get created` });
         };
     });
 });
