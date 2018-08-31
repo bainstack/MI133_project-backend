@@ -135,6 +135,8 @@ db.serialize(() => {
             }
             if (this.changes == 1) {
                 trip_id = this.lastID;
+                console.log(req.body.crew, trip_id);
+                console.log('INSERT INTO crews (id, member_id) VALUES (?, (SELECT id FROM members WHERE username = ?));', trip_id, item);
                 req.body.crew.forEach((item, trip_id) => {
                     db.run('INSERT INTO crews (id, member_id) VALUES (?, (SELECT id FROM members WHERE username = ?));', trip_id, item, (err) => {
                         if (this.changes == 1) {
