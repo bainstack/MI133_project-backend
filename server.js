@@ -92,26 +92,31 @@ app.get('/view_trips', passport.authenticate('local'), (req, res) => {
         let current_dtm = 1506067538;
         db.all('SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;', current_dtm, (err, trips) => {
             if (err) {
+                console.log('Error when requesting ALL /view_trips');
                 return res.json(err.message);
             }
             if (trips) {
+                console.log('Successfully requested /view_trips');
                 return res.json({ success: true, trips });
             }
             else {
-                console.log('no trips found');
+                console.log('/view_trips requested but no trips found');
                 return res.json({ success: false, message: `No trips found` });
             };
         });
     }
     else {
-        db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', id, function (err, trip) {
+        db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', req.body.id, function (err, trip) {
             if (err) {
+                console.log(`Error when requesting /view_trips with id ${id}`);
                 return res.json(err.message);
             }
             if (trip) {
+                console.log(`Successfully requested /view_trips with id ${id}`);
                 return res.json({ success: true, trip });
             }
             else {
+                console.log(`Successfully requested /view_trips with id ${id} but nothing found`);
                 return res.json({ success: false, message: `trip not found` });
             };
         });
@@ -121,12 +126,15 @@ app.get('/view_trips', passport.authenticate('local'), (req, res) => {
 app.post('/create_trip', passport.authenticate('local'), (req, res) => {
     db.all('INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?, ?);', req.body.boat_id, req.body.crew_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err, trip) => {
         if (err) {
+            console.log(`Error when requesting /create_trip`);
             return res.json(err.message);
         }
         if (trip) {
+            console.log(`Successfully requested /create_trip`);
             return res.json({ success: true, trip });
         }
         else {
+            console.log(`Successfully requested /create_trip but didn't work`);
             return res.json({ success: false, message: `trip couldnt't be created` });
         };
     });
