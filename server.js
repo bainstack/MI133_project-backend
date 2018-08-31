@@ -41,12 +41,15 @@ passport.use(new LocalStrategy(
         db.get('SELECT * FROM members WHERE username == ? AND password == ?;', username, password, (err, user) => {
             //User.findOne({ username: username }, function (err, user) {
             if (err) {
+                console.log(err);
                 return done(err);
             }
             if (!user) {
+                console.log('Incorrect username.');
                 return done(null, false, { message: 'Incorrect username.' });
             }
             if (!password) {
+                console.log('Incorrect password.');
                 return done(null, false, { message: 'Incorrect password.' });
             }
             return done(null, user);
@@ -81,12 +84,12 @@ app.post('/register', (req, res) => {
     })
 });
 
-app.post('/login', passport.authenticate('local'), (req, res) => {
+app.post('/login', (req, res) => {
     console.log('User ' + req.body.username + ' connected');
     res.send(JSON.stringify({ message: 'Congrats ' + req.body.username + '! You logged in successfully!' }));
 });
 
-app.get('/view_trips', passport.authenticate('local'), (req, res) => {
+app.get('/view_trips', (req, res) => {
     if (id == "all") {
         //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
         let current_dtm = 1506067538;
@@ -123,7 +126,8 @@ app.get('/view_trips', passport.authenticate('local'), (req, res) => {
     }
 });
 
-app.post('/create_trip', passport.authenticate('local'), (req, res) => {
+app.post('/create_trip', (req, res) => {
+    console.log(req.stack);
     db.all('INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?, ?);', req.body.boat_id, req.body.crew_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err, trip) => {
         if (err) {
             console.log(`Error when requesting /create_trip`);
@@ -154,7 +158,7 @@ app.post('/join trip', (req, res) => {
     });
 });
 
-app.get('/get_boats', passport.authenticate('local'), (req, res) => {
+app.get('/get_boats', (req, res) => {
     db.all('SELECT * FROM boats;', (err, boat) => {
         if (err) {
             return res.json(err.message);
@@ -164,6 +168,7 @@ app.get('/get_boats', passport.authenticate('local'), (req, res) => {
 });
 
 app.post('/create_boat', (req, res) => {
+    console.log('requested /create_boat');
     db.all('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?);', req.body.boat_name, req.body.boat_size, (err, boat) => {
         if (err) {
             return res.json(err.message);
