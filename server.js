@@ -127,7 +127,7 @@ app.get('/view_trips', (req, res) => {
 });
 
 app.post('/create_trip', (req, res) => {
-    console.log(req.stack);
+    console.log(req.body);
     db.all('INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?, ?);', req.body.boat_id, req.body.crew_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err, trip) => {
         if (err) {
             console.log(`Error when requesting /create_trip`);
