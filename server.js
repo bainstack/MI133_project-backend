@@ -135,9 +135,19 @@ app.post('/create_trip', (req, res) => {
             return res.json(err.message);
         }
         if (this.changes == 1) {
-            console.log(`Rows inserted`);
             console.log(`Successfully requested /create_trip`);
-            return res.json({ success: true, message: 'new trip created' });
+            let row_id = this.lastID;
+            req.body.crew.forEach(element => {
+                db.run('INSERT INTO crews (id, member_id) VALUES (?, (SELECT username from members WHERE username = ?))', row_id, element, function (err) {
+                    if (err) {
+                        console.log(`Error when creating new crew-trip-relation`);
+                        return res.json(err.message);
+                    }
+                    if (this.changes == 1) {
+                        return res.json({ success: true, message: 'new trip and crew-trip-relation created' });
+                    }
+                });
+            });
         }
         else {
             console.log(this.changes);
