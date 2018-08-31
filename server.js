@@ -66,7 +66,7 @@ passport.deserializeUser(function (user, done) {
 });
 
 app.post('/register', (req, res) => {
-    db.get('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, (err, user) => {
+    db.run('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, (err, user) => {
         if (err) {
             console.log(err);
             return res.send(err.message);
@@ -128,12 +128,13 @@ app.get('/view_trips', (req, res) => {
 
 app.post('/create_trip', (req, res) => {
     console.log(req.body);
-    db.all('INSERT INTO trips (boat, crew, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?, ?);', req.body.boat_id, req.body.crew_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err, trip) => {
+    db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?);', req.body.boat_id, req.body, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err, trip) => {
         if (err) {
             console.log(`Error when requesting /create_trip`);
             return res.json(err.message);
         }
         if (trip) {
+            console.log(`Rows inserted ${trip}`);
             console.log(`Successfully requested /create_trip`);
             return res.json({ success: true, trip });
         }
@@ -145,7 +146,7 @@ app.post('/create_trip', (req, res) => {
 });
 
 app.post('/join trip', (req, res) => {
-    db.all('INSERT INTO crews (id, member_id) VALUES (?, ?);', req.body.crew_id, req.body.member_id, (err, trip) => {
+    db.run('INSERT INTO crews (id, member_id) VALUES (?, ?);', req.body.crew_id, req.body.member_id, (err, trip) => {
         if (err) {
             return res.json(err.message);
         }
@@ -169,7 +170,7 @@ app.get('/get_boats', (req, res) => {
 
 app.post('/create_boat', (req, res) => {
     console.log('requested /create_boat');
-    db.all('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?);', req.body.boat_name, req.body.boat_size, (err, boat) => {
+    db.run('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?);', req.body.boat_name, req.body.boat_size, (err, boat) => {
         if (err) {
             return res.json(err.message);
         }
