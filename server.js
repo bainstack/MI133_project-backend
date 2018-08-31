@@ -136,14 +136,14 @@ db.serialize(() => {
             if (this.changes == 1) {
                 trip_id = this.lastID;
                 req.body.crew.forEach((item, trip_id) => {
-                    db.run('INSERT INTO crews (id, member_id) VALUES (?, SELECT * FROM members WHERE username = ?);', trip_id, item, (err) => {
+                    db.run('INSERT INTO crews (id, member_id) VALUES (?, (SELECT id FROM members WHERE username = ?));', trip_id, item, (err) => {
                         if (this.changes == 1) {
+                            console.log(`Successfully requested /create_trip`);
                             console.log('added user to crew');
+                            return res.json({ success: true, message: 'new trip created' });
                         }
                     });
                 });
-                console.log(`Successfully requested /create_trip`);
-                return res.json({ success: true, message: 'new trip created' });
             }
             else {
                 console.log(`Successfully requested /create_trip but didn't work`);
