@@ -127,21 +127,25 @@ app.get('/view_trips', (req, res) => {
 });
 
 
-app.post('/create_trip', async function (req, res) {
-    console.log(req.body);
-    console.log(`INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (${req.body.boat_id}, ${req.body.latitude}, ${req.body.longitude}, ${req.body.departure}, ${req.body.arrival})`);
-    await db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?);', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err, trip) => {
+app.post('/create_trip', function (req, res) {
+    db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?);', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err) => {
         if (err) {
             console.log(`Error when requesting /create_trip`);
             return res.json(err.message);
         }
-        if (trip) {
-            console.log(`Rows inserted ${trip}`);
+        if (this.changes == 1) {
+            trip_id = this.lastID;
+            req.body.crew.forEach((item, trip_id) => {
+                db.run('INSERT INTO crews (id, member_id) VALUES (?, SELECT * FROM members WHERE username = ?);', trip_id, item, (err) => {
+                    if (this.changes == 1) {
+                        console.log('added user to crew');
+                    }
+                });
+            });
             console.log(`Successfully requested /create_trip`);
-            return res.json({ success: true, trip });
+            return res.json({ success: true, message: 'new trip created' });
         }
         else {
-            console.log(trip);
             console.log(`Successfully requested /create_trip but didn't work`);
             return res.json({ success: false, message: `trip couldnt't be created` });
         };
