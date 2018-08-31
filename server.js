@@ -130,7 +130,7 @@ app.get('/view_trips', (req, res) => {
 app.post('/create_trip', async function (req, res) {
     console.log(req.body);
     console.log(`INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (${req.body.boat_id}, ${req.body.latitude}, ${req.body.longitude}, ${req.body.departure}, ${req.body.arrival})`);
-    db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?);', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err, trip) => {
+    await db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?);', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, (err, trip) => {
         if (err) {
             console.log(`Error when requesting /create_trip`);
             return res.json(err.message);
