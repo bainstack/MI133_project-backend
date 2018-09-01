@@ -127,67 +127,69 @@ app.get('/view_trips', (req, res) => {
 });
 
 app.post('/create_trip', (req, res) => {
-    console.log(req.body);
-    let check_users = false;
-    req.body.crew.forEach(element => {
-        db.get('SELECT * FROM members where username == ?', element, function (err, username) {
-            if (err) {
-                return res.json(err.message);
-            }
-            if (username) {
-                console.log('user_check passed');
-                check_users = true;
-            }
-            else {
-                console.log('user_check failed');
-                check_users = false;
-                return res.json({ success: false, message: `user ${element} doesn't exist` });
-            }
-        });
-    });
-
-    if (check_users == true) {
-        db.serialize(() => {
-            db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?)', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, function (err) {
+    db.serialize(() => {
+        console.log(req.body);
+        let check_users = false;
+        req.body.crew.forEach(element => {
+            db.get('SELECT * FROM members where username == ?', element, function (err, username) {
                 if (err) {
-                    console.log(`Error when requesting /create_trip`);
                     return res.json(err.message);
                 }
-                if (this.changes == 1) {
-                    let row_id = this.lastID;
-                    req.body.crew.forEach(element => {
-                        db.serialize(() => {
-                            db.get('SELECT id FROM members WHERE username == ?;', element, function (err, user_id) {
-                                if (err) {
-                                    return ({ success: false, message: err });
-                                }
-                                if (user_id) {
-                                    let insert_user = `INSERT INTO crews (id, member_id) VALUES (${row_id}, ${user_id.id});`;
-                                    db.serialize(() => {
-                                        db.run(insert_user, function (err) {
-                                            if (err) {
-                                                console.log(`Error when creating new crew-trip-relation`);
-                                                return (err);
-                                            }
-                                            if (this.changes == 1) {
-                                                console.log('new trip and crew-trip-relation created');
-                                                return (this.changes, this.lastID);
-                                            }
-                                        });
-                                    });
-                                    return (this.changes, this.lastID);
-                                }
-                                else {
-                                    return (this.changes);
-                                }
-                            });
-                        });
-                    });
-                    return res.json(this.changes);
+                if (username) {
+                    console.log('user_check passed');
+                    check_users = true;
+                }
+                else {
+                    console.log('user_check failed');
+                    check_users = false;
+                    return res.json({ success: false, message: `user ${element} doesn't exist` });
                 }
             });
         });
-    }
+
+        if (check_users == true) {
+            db.serialize(() => {
+                db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?)', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, function (err) {
+                    if (err) {
+                        console.log(`Error when requesting /create_trip`);
+                        return res.json(err.message);
+                    }
+                    if (this.changes == 1) {
+                        let row_id = this.lastID;
+                        req.body.crew.forEach(element => {
+                            db.serialize(() => {
+                                db.get('SELECT id FROM members WHERE username == ?;', element, function (err, user_id) {
+                                    if (err) {
+                                        return ({ success: false, message: err });
+                                    }
+                                    if (user_id) {
+                                        let insert_user = `INSERT INTO crews (id, member_id) VALUES (${row_id}, ${user_id.id});`;
+                                        db.serialize(() => {
+                                            db.run(insert_user, function (err) {
+                                                if (err) {
+                                                    console.log(`Error when creating new crew-trip-relation`);
+                                                    return (err);
+                                                }
+                                                if (this.changes == 1) {
+                                                    console.log('new trip and crew-trip-relation created');
+                                                    return (this.changes, this.lastID);
+                                                }
+                                            });
+                                        });
+                                        return (this.changes, this.lastID);
+                                    }
+                                    else {
+                                        return (this.changes);
+                                    }
+                                });
+                            });
+                        });
+                        return res.json(this.changes);
+                    }
+                });
+            });
+        }
+    });
 });
 
 app.post('/join trip', (req, res) => {
