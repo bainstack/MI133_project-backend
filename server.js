@@ -141,19 +141,15 @@ app.post('/create_trip', (req, res) => {
                 db.run('INSERT INTO crews (id, member_id) VALUES (?, (SELECT username from members WHERE username = ?))', row_id, element, function (err) {
                     if (err) {
                         console.log(`Error when creating new crew-trip-relation`);
-                        return res.json(err.message);
+                        return ({ success: false, message: err });
                     }
                     if (this.changes == 1) {
-                        return res.json({ success: true, message: 'new trip and crew-trip-relation created' });
+                        return ({ success: true, message: 'new trip and crew-trip-relation created' });
                     }
                 });
             });
+            return res.json({ success, message });
         }
-        else {
-            console.log(this.changes);
-            console.log(`Successfully requested /create_trip but didn't work`);
-            return res.json({ success: false, message: "trip couldnt't be created" });
-        };
     });
 });
 
