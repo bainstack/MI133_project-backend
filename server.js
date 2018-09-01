@@ -131,7 +131,7 @@ app.post('/create_trip', (req, res) => {
         console.log(req.body);
         async function check_users(users) {
             check_users = false;
-            users.forEach(element => {
+            await users.forEach(element => {
                 db.get('SELECT * FROM members where username == ?', element, function (err, username) {
                     if (err) {
                         return false;
@@ -150,7 +150,7 @@ app.post('/create_trip', (req, res) => {
             });
         };
 
-        if (await check_users(req.body.crew) == true) {
+        if (check_users(req.body.crew) == true) {
             db.serialize(() => {
                 db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?)', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, function (err) {
                     if (err) {
