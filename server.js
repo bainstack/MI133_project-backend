@@ -144,7 +144,7 @@ app.post('/create_trip', (req, res) => {
                     else {
                         console.log('user_check failed');
                         check_users = false;
-                        return ({ success: false, message: `user ${element} doesn't exist` });
+                        return res.json({ success: false, message: `user ${element} doesn't exist` });
                     }
                 });
             });
