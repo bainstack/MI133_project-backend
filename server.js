@@ -134,7 +134,7 @@ app.post('/create_trip', (req, res) => {
             users.forEach(element => {
                 db.get('SELECT * FROM members where username == ?', element, function (err, username) {
                     if (err) {
-                        return ({ success: false, message: err.message });
+                        return false;
                     }
                     if (username) {
                         console.log('user_check passed');
@@ -144,13 +144,13 @@ app.post('/create_trip', (req, res) => {
                     else {
                         console.log('user_check failed');
                         check_users = false;
-                        return res.json({ success: false, message: `user ${element} doesn't exist` });
+                        return false;
                     }
                 });
             });
         };
 
-        if (check_users(req.body.crew) == true) {
+        if (await check_users(req.body.crew) == true) {
             db.serialize(() => {
                 db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?)', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, function (err) {
                     if (err) {
