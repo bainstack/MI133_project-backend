@@ -137,7 +137,7 @@ app.post('/create_trip', (req, res) => {
         if (this.changes == 1) {
             console.log(`Successfully requested /create_trip`);
             let row_id = this.lastID;
-            req.body.crew.forEach(element => {
+            let create_trip = req.body.crew.forEach(element => {
                 db.run('INSERT INTO crews (id, member_id) VALUES (?, (SELECT username from members WHERE username = ?))', row_id, element, function (err) {
                     if (err) {
                         console.log(`Error when creating new crew-trip-relation`);
@@ -148,7 +148,7 @@ app.post('/create_trip', (req, res) => {
                     }
                 });
             });
-            return res.json({ success, message });
+            return res.json({ create_trip });
         }
     });
 });
