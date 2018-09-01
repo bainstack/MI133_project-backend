@@ -193,7 +193,7 @@ app.post('/create_trip', (req, res) => {
             });
         }
         else {
-            return ({ success: false, message: `trip-creation failed` });
+            return res.json({ success: false, message: `trip-creation failed` });
         }
     });
 });
