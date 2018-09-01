@@ -130,8 +130,7 @@ app.post('/create_trip', (req, res) => {
     db.serialize(() => {
         console.log(req.body);
         async function check_users(users) {
-            check_users = false;
-            await users.forEach(element => {
+            let check_users = await users.forEach(element => {
                 db.get('SELECT * FROM members where username == ?', element, function (err, username) {
                     if (err) {
                         return false;
@@ -148,6 +147,7 @@ app.post('/create_trip', (req, res) => {
                     }
                 });
             });
+            return check_users;
         };
 
         if (check_users(req.body.crew) == true) {
