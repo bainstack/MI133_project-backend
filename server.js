@@ -129,25 +129,28 @@ app.get('/view_trips', (req, res) => {
 app.post('/create_trip', (req, res) => {
     db.serialize(() => {
         console.log(req.body);
-        let check_users = false;
-        req.body.crew.forEach(element => {
-            db.get('SELECT * FROM members where username == ?', element, function (err, username) {
-                if (err) {
-                    return res.json(err.message);
-                }
-                if (username) {
-                    console.log('user_check passed');
-                    check_users = true;
-                }
-                else {
-                    console.log('user_check failed');
-                    check_users = false;
-                    return res.json({ success: false, message: `user ${element} doesn't exist` });
-                }
-            });
-        });
 
-        if (check_users == true) {
+        async function check_users(users) {
+            users.forEach(element => {
+                db.get('SELECT * FROM members where username == ?', element, function (err, username) {
+                    if (err) {
+                        return ({ success: false, message: err.message });
+                    }
+                    if (username) {
+                        console.log('user_check passed');
+                        check_users = true;
+                        return true;
+                    }
+                    else {
+                        console.log('user_check failed');
+                        check_users = false;
+                        return ({ success: false, message: `user ${element} doesn't exist` });
+                    }
+                });
+            });
+        };
+
+        if (check_users(req.body.crew) == true) {
             db.serialize(() => {
                 db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?)', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, function (err) {
                     if (err) {
@@ -188,6 +191,9 @@ app.post('/create_trip', (req, res) => {
                     }
                 });
             });
+        }
+        else {
+            return ({ success: false, message: `trip-creation failed` });
         }
     });
 });
