@@ -129,8 +129,8 @@ app.get('/view_trips', (req, res) => {
 app.post('/create_trip', (req, res) => {
     db.serialize(() => {
         console.log(req.body);
-
         async function check_users(users) {
+            check_users = false;
             users.forEach(element => {
                 db.get('SELECT * FROM members where username == ?', element, function (err, username) {
                     if (err) {
