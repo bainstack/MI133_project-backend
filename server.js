@@ -128,7 +128,6 @@ app.get('/view_trips', (req, res) => {
 
 app.post('/create_trip', (req, res) => {
     console.log(req.body);
-
     let check_users = false;
     req.body.crew.forEach(element => {
         db.get('SELECT * FROM members where username == ?', element, function (err, username) {
@@ -140,8 +139,8 @@ app.post('/create_trip', (req, res) => {
                 check_users = true;
             }
             else {
+                console.log('user_check failed');
                 check_users = false;
-                return res.json({ success: false, message: `not all users exist` });
             }
         });
     });
