@@ -90,7 +90,7 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/view_trips', (req, res) => {
-    if (id == "all") {
+    if (req.body.id == "all") {
         //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
         let current_dtm = 1506067538;
         db.all('SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;', current_dtm, (err, trips) => {
@@ -128,47 +128,66 @@ app.get('/view_trips', (req, res) => {
 
 app.post('/create_trip', (req, res) => {
     console.log(req.body);
-    console.log(`INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (${req.body.boat_id}, ${req.body.latitude}, ${req.body.longitude}, ${req.body.departure}, ${req.body.arrival})`);
-    db.serialize(() => {
-        db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?)', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, function (err) {
+
+    let check_users = false;
+    req.body.crew.forEach(element => {
+        db.get('SELECT * FROM members where username == ?', element, function (err, username) {
             if (err) {
-                console.log(`Error when requesting /create_trip`);
                 return res.json(err.message);
             }
-            if (this.changes == 1) {
-                let row_id = this.lastID;
-                req.body.crew.forEach(element => {
-                    db.serialize(() => {
-                        db.get('SELECT id FROM members WHERE username == ?;', element, function (err, user_id) {
-                            if (err) {
-                                return ({ success: false, message: err });
-                            }
-                            if (user_id) {
-                                let insert_user = `INSERT INTO crews (id, member_id) VALUES (${row_id}, ${user_id.id});`;
-                                db.serialize(() => {
-                                    db.run(insert_user, function (err) {
-                                        if (err) {
-                                            console.log(`Error when creating new crew-trip-relation`);
-                                            return (err);
-                                        }
-                                        if (this.changes == 1) {
-                                            console.log('new trip and crew-trip-relation created');
-                                            return (this.changes, this.lastID);
-                                        }
-                                    });
-                                });
-                                return (this.changes, this.lastID);
-                            }
-                            else {
-                                return (this.changes);
-                            }
-                        });
-                    });
-                });
-                return res.json(this.changes);
+            if (username) {
+                console.log('user_check passed');
+                check_users = true;
+            }
+            else {
+                check_users = false;
+                return res.json({ success: false, message: `not all users exist` });
             }
         });
     });
+
+    if (check_users == true) {
+        db.serialize(() => {
+            db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?)', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, function (err) {
+                if (err) {
+                    console.log(`Error when requesting /create_trip`);
+                    return res.json(err.message);
+                }
+                if (this.changes == 1) {
+                    let row_id = this.lastID;
+                    req.body.crew.forEach(element => {
+                        db.serialize(() => {
+                            db.get('SELECT id FROM members WHERE username == ?;', element, function (err, user_id) {
+                                if (err) {
+                                    return ({ success: false, message: err });
+                                }
+                                if (user_id) {
+                                    let insert_user = `INSERT INTO crews (id, member_id) VALUES (${row_id}, ${user_id.id});`;
+                                    db.serialize(() => {
+                                        db.run(insert_user, function (err) {
+                                            if (err) {
+                                                console.log(`Error when creating new crew-trip-relation`);
+                                                return (err);
+                                            }
+                                            if (this.changes == 1) {
+                                                console.log('new trip and crew-trip-relation created');
+                                                return (this.changes, this.lastID);
+                                            }
+                                        });
+                                    });
+                                    return (this.changes, this.lastID);
+                                }
+                                else {
+                                    return (this.changes);
+                                }
+                            });
+                        });
+                    });
+                    return res.json(this.changes);
+                }
+            });
+        });
+    }
 });
 
 app.post('/join trip', (req, res) => {
