@@ -65,6 +65,43 @@ passport.deserializeUser(function (user, done) {
     done(null, user);
 });
 
+
+db.getAsync = function (sql) {
+    var that = this;
+    return new Promise(function (resolve, reject) {
+        that.get(sql, function (err, row) {
+            if (err)
+                reject(err);
+            else
+                resolve(row);
+        });
+    });
+};
+
+db.allAsync = function (sql) {
+    var that = this;
+    return new Promise(function (resolve, reject) {
+        that.all(sql, function (err, rows) {
+            if (err)
+                reject(err);
+            else
+                resolve(rows);
+        });
+    });
+};
+
+db.runAsync = function (sql) {
+    var that = this;
+    return new Promise(function (resolve, reject) {
+        that.run(sql, function (err) {
+            if (err)
+                reject(err);
+            else
+                resolve(this);
+        });
+    })
+};
+
 app.post('/register', (req, res) => {
     db.run('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, (err, user) => {
         if (err) {
@@ -126,76 +163,37 @@ app.get('/view_trips', (req, res) => {
     }
 });
 
-app.post('/create_trip', (req, res) => {
-    db.serialize(() => {
-        console.log(req.body);
-        async function check_users(users) {
-            let check_users = await users.forEach(element => {
-                db.get('SELECT * FROM members where username == ?', element, function (err, username) {
-                    if (err) {
-                        return false;
-                    }
-                    if (username) {
-                        console.log('user_check passed');
-                        check_users = true;
-                        return true;
-                    }
-                    else {
-                        console.log('user_check failed');
-                        check_users = false;
-                        return false;
-                    }
-                });
-            });
-            return check_users;
-        };
-
-        if (check_users(req.body.crew) == true) {
-            db.serialize(() => {
-                db.run('INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (?, ?, ?, ?, ?)', req.body.boat_id, req.body.latitude, req.body.longitude, req.body.departure, req.body.arrival, function (err) {
-                    if (err) {
-                        console.log(`Error when requesting /create_trip`);
-                        return res.json(err.message);
-                    }
-                    if (this.changes == 1) {
-                        let row_id = this.lastID;
-                        req.body.crew.forEach(element => {
-                            db.serialize(() => {
-                                db.get('SELECT id FROM members WHERE username == ?;', element, function (err, user_id) {
-                                    if (err) {
-                                        return ({ success: false, message: err });
-                                    }
-                                    if (user_id) {
-                                        let insert_user = `INSERT INTO crews (id, member_id) VALUES (${row_id}, ${user_id.id});`;
-                                        db.serialize(() => {
-                                            db.run(insert_user, function (err) {
-                                                if (err) {
-                                                    console.log(`Error when creating new crew-trip-relation`);
-                                                    return (err);
-                                                }
-                                                if (this.changes == 1) {
-                                                    console.log('new trip and crew-trip-relation created');
-                                                    return (this.changes, this.lastID);
-                                                }
-                                            });
-                                        });
-                                        return (this.changes, this.lastID);
-                                    }
-                                    else {
-                                        return (this.changes);
-                                    }
-                                });
-                            });
-                        });
-                        return res.json(this.changes);
-                    }
-                });
-            });
+app.post('/create_trip', async (req, res, next) => {
+    var stmt;
+    var check = true;
+    var memberID;
+    var tripID;
+    
+    for (i = 0; i < req.body.crew.length; i++) {
+        stmt = `SELECT * FROM members where username = "${req.body.crew[i]}";`;
+        if (await db.getAsync(stmt) == false) check = false;
+    }
+    console.log(check);
+    if (check == false) res.json({ success: false, message: 'crew_check failed' });
+    if (check == true) {
+        stmt = `INSERT INTO trips (boat, latitude, longitude, departure, arrival) VALUES (${req.body.boat_id}, ${req.body.latitude}, ${req.body.longitude}, ${req.body.departure}, ${req.body.arrival});`;
+        console.log(stmt);
+        var tripID = await db.runAsync(stmt);
+        console.log("ID von Trip-creation: " + tripID.lastID);
+        if (tripID.changes >= 1) {
+            for (i = 0; i < req.body.crew.length; i++) {
+                stmt = `SELECT id FROM members where username = "${req.body.crew[i]}"`;
+                console.log(stmt);
+                memberID = await db.getAsync(stmt);
+                console.log(memberID.id);
+                stmt = `INSERT INTO crews(id, member_id) VALUES(${tripID.lastID}, ${memberID.id});`;
+                console.log(stmt);
+                check = await db.runAsync(stmt);
+                console.log(check.changes);
+            }
+            res.json({ success: true, message: 'crew_check passed, trip inserted, crew assigned to trip' });
         }
-        else {
-            return res.json({ success: false, message: `trip-creation failed` });
-        }
-    });
+    }
 });
 
 app.post('/join trip', (req, res) => {
