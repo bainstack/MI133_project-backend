@@ -126,11 +126,11 @@ app.post('/login', (req, res) => {
     res.send(JSON.stringify({ message: 'Congrats ' + req.body.username + '! You logged in successfully!' }));
 });
 
-app.get('/view_trips', (req, res) => {
+app.post('/view_trips', (req, res) => {
+    console.log('view_trips called');
     if (req.body.id == "all") {
-        //var current_dtm = Date.now() - 3600; // TODO: use current_dtm for production use
-        let current_dtm = 1506067538;
-        db.all('SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crew;', current_dtm, (err, trips) => {
+        var current_dtm = (Date.now() / 1000) - 3600;
+        db.all('SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.id = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crews.id LIMIT 20;', current_dtm, (err, trips) => {
             if (err) {
                 console.log('Error when requesting ALL /view_trips');
                 return res.json(err.message);
@@ -168,7 +168,7 @@ app.post('/create_trip', async (req, res, next) => {
     var check = true;
     var memberID;
     var tripID;
-    
+
     for (i = 0; i < req.body.crew.length; i++) {
         stmt = `SELECT * FROM members where username = "${req.body.crew[i]}";`;
         if (await db.getAsync(stmt) == false) check = false;
@@ -211,6 +211,7 @@ app.post('/join trip', (req, res) => {
 });
 
 app.get('/get_boats', (req, res) => {
+    console.log('get_boats-route called');
     db.all('SELECT * FROM boats;', (err, boat) => {
         if (err) {
             return res.json(err.message);
