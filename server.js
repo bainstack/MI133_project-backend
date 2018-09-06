@@ -123,15 +123,24 @@ app.post('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
     console.log('User ' + req.body.username + ' connected');
-    res.send(JSON.stringify({ message: 'Congrats ' + req.body.username + '! You logged in successfully!' }));
+    db.all('SELECT id FROM members WHERE id = ?;', req.body.username, (err, user) => {
+        if (err) {
+            console.log('User ' + req.body.username + ' connected');
+            return res.json({ success: true, user: user });
+        }
+        else {
+            console.log(`/login requested but user ${req.body.username} not found!`);
+            return res.json({ success: false, message: `User not found!` });
+        }
+    })
 });
 
 app.post('/view_trips', (req, res) => {
     console.log('view_trips called');
     if (req.body.id == "all") {
         //var current_dtm = Math.floor((Date.now() / 1000) - 3600);
-var current_dtm = 1530000000;
-console.log(current_dtm);
+        var current_dtm = 1530000000;
+        console.log(current_dtm);
         db.all('SELECT * FROM trips LEFT JOIN boats ON trips.boat = boats.id LEFT JOIN crews ON trips.id = crews.trip_id LEFT JOIN members ON crews.member_id = members.id WHERE trips.departure >= ? ORDER BY crews.trip_id DESC LIMIT 20;', current_dtm, (err, trips) => {
             if (err) {
                 console.log('Error when requesting ALL /view_trips');
@@ -148,7 +157,7 @@ console.log(current_dtm);
         });
     }
     else {
-        db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', req.body.id, function (err, trip) {
+        db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.trip_id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', req.body.id, function (err, trip) {
             if (err) {
                 console.log(`Error when requesting /view_trips with id ${id}`);
                 return res.json(err.message);
@@ -199,7 +208,7 @@ app.post('/create_trip', async (req, res, next) => {
 });
 
 app.post('/join trip', (req, res) => {
-    db.run('INSERT INTO crews (id, member_id) VALUES (?, ?);', req.body.crew_id, req.body.member_id, (err, trip) => {
+    db.run('INSERT INTO crews (trip_id, member_id) VALUES (?, ?);', req.body.crew_id, req.body.member_id, (err, trip) => {
         if (err) {
             return res.json(err.message);
         }
