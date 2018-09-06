@@ -102,23 +102,20 @@ db.runAsync = function (sql) {
     })
 };
 
-app.post('/register', (req, res) => {
-    db.run('SELECT * FROM members WHERE username == "?" OR (first_name == "?" AND last_name == "?")', req.body.username, req.body.first_name, req.body.last_name, (err, user) => {
-        if (err) {
-            console.log(err);
-            return res.send(err.message);
-        }
-        if (user) {
-            console.log(user);
-            return res.json({ success: false, message: `User ${req.body.username} already exists!` });
-        }
-        else {
-            console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
-            db.all('INSERT INTO members (username, first_name, last_name, password) VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password);
-            console.log('Registered new user: ' + req.body.username);
-            return res.json({ success: true, message: `${req.body.username} successfully created` });
-        }
-    })
+app.post('/register', async (req, res, next) => {
+    var stmt = `SELECT * FROM members WHERE username = "${req.body.username}";`;
+    console.log(stmt);
+    var check = await db.allAsync(stmt);
+    console.log(check);
+    if (check.length != 0) {
+        res.json({ success: false, message: `user ${req.body.username} already exists` });
+    }
+    else {
+        console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
+        db.all('INSERT INTO members (username, first_name, last_name, password) VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password);
+        console.log('Registered new user: ' + req.body.username);
+        return res.json({ success: true, message: `${req.body.username} successfully created` });
+    }
 });
 
 app.post('/login', (req, res) => {
