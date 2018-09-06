@@ -126,10 +126,13 @@ app.post('/login', (req, res) => {
     db.all('SELECT id FROM members WHERE id = ?;', req.body.username, (err, user) => {
         if (err) {
             console.log('User ' + req.body.username + ' connected');
+            return res.json({ success: false, message: err.message });
+        }
+        if (user) {
+            console.log(`/login requested but user ${req.body.username} not found!`);
             return res.json({ success: true, user: user });
         }
         else {
-            console.log(`/login requested but user ${req.body.username} not found!`);
             return res.json({ success: false, message: `User not found!` });
         }
     })
