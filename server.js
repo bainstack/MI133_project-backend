@@ -103,7 +103,7 @@ db.runAsync = function (sql) {
 };
 
 app.post('/register', (req, res) => {
-    db.run('SELECT * FROM members WHERE username == ? OR (first_name == ? AND last_name == ?)', req.body.username, req.body.first_name, req.body.last_name, (err, user) => {
+    db.run('SELECT * FROM members WHERE username == "?" OR (first_name == "?" AND last_name == "?")', req.body.username, req.body.first_name, req.body.last_name, (err, user) => {
         if (err) {
             console.log(err);
             return res.send(err.message);
@@ -123,16 +123,18 @@ app.post('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
     console.log('User ' + req.body.username + ' connected');
-    db.all('SELECT id FROM members WHERE id = ?;', req.body.username, (err, user) => {
+    db.all('SELECT id FROM members WHERE username = "?";', req.body.username, (err, user) => {
+        console.log(user);
         if (err) {
             console.log('User ' + req.body.username + ' connected');
             return res.json({ success: false, message: err.message });
         }
         if (user) {
-            console.log(`/login requested but user ${req.body.username} not found!`);
-            return res.json({ success: true, user: user });
+            console.log(`/login requested and user ${req.body.username} logged in!`);
+            return res.json({ success: true, user: user[0] });
         }
         else {
+            console.log(`/login requested but user ${req.body.username} not found!`);
             return res.json({ success: false, message: `User not found!` });
         }
     })
