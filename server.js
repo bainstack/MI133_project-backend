@@ -129,8 +129,10 @@ app.post('/login', (req, res) => {
 app.post('/view_trips', (req, res) => {
     console.log('view_trips called');
     if (req.body.id == "all") {
-        var current_dtm = (Date.now() / 1000) - 3600;
-        db.all('SELECT * FROM trips, crews, boats, members WHERE (departure >= ? ) AND (trips.id = crews.id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure, crews.id LIMIT 20;', current_dtm, (err, trips) => {
+        //var current_dtm = Math.floor((Date.now() / 1000) - 3600);
+var current_dtm = 1530000000;
+console.log(current_dtm);
+        db.all('SELECT * FROM trips LEFT JOIN boats ON trips.boat = boats.id LEFT JOIN crews ON trips.id = crews.trip_id LEFT JOIN members ON crews.member_id = members.id WHERE trips.departure >= ? ORDER BY crews.trip_id DESC LIMIT 20;', current_dtm, (err, trips) => {
             if (err) {
                 console.log('Error when requesting ALL /view_trips');
                 return res.json(err.message);
@@ -186,7 +188,7 @@ app.post('/create_trip', async (req, res, next) => {
                 console.log(stmt);
                 memberID = await db.getAsync(stmt);
                 console.log(memberID.id);
-                stmt = `INSERT INTO crews(id, member_id) VALUES(${tripID.lastID}, ${memberID.id});`;
+                stmt = `INSERT INTO crews(trip_id, member_id) VALUES(${tripID.lastID}, ${memberID.id});`;
                 console.log(stmt);
                 check = await db.runAsync(stmt);
                 console.log(check.changes);
