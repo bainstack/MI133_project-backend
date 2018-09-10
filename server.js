@@ -3,8 +3,8 @@ var express = require('express'),        // call express
     cors = require('cors'), // call cors to enable cross-origin fetching
     app = express(),                 // define our app using express
     bodyParser = require('body-parser'),    // call body-parser
-    cookieParser = require('cookie-parser'); // call cookie-parser
-sqlite3 = require('sqlite3').verbose(), // call sqlite-database
+    cookieParser = require('cookie-parser'), // call cookie-parser
+    sqlite3 = require('sqlite3').verbose(), // call sqlite-database
     server = require('http').Server(app), // add http to the server
     session = require('express-session'), // add session middleware
     SQLiteStore = require('connect-sqlite3')(session), // add SQLiteStore to use it for session
@@ -115,7 +115,6 @@ app.post('/login', (req, res) => {
     var stmt = `SELECT id, password FROM members WHERE username = '${req.body.username}' AND password = '${req.body.password}';`;
     console.log(stmt);
     db.all(stmt, (err, user) => {
-        console.log(stmt);
         if (err) {
             res.json({ success: false, message: err.message });
         }
@@ -131,7 +130,7 @@ app.post('/login', (req, res) => {
 });
 
 // Logout endpoint
-app.get('/logout', function (req, res) {
+app.get('/logout', auth, function (req, res) {
     req.session.destroy();
     res.json({ message: "logout success!" });
 });
