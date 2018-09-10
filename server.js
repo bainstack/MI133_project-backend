@@ -105,16 +105,17 @@ app.post('/register', async (req, res, next) => {
     console.log(stmt);
     var check = await db.allAsync(stmt);
     if (check.length != 0) {
-        return res.json({ success: false, message: `user ${req.body.username} already exists` });
+        console.log('check failed');
+        res.json({ success: false, message: `user ${req.body.username} already exists` });
     }
     else {
         stmt = `INSERT INTO members (username, first_name, last_name, password) VALUES (${req.body.username}, ${req.body.first_name}, ${req.body.last_name}, ${req.body.password};`;
         db.run(stmt, (err) => {
             if (err) {
-                return res.json(err.message);
+                res.json(err.message);
             }
             else {
-                return res.json({ success: true, message: `${req.body.username} successfully created` });
+                res.json({ success: true, message: `${req.body.username} successfully created` });
             }
         })
     }
@@ -125,13 +126,13 @@ app.post('/login', (req, res) => {
     console.log(stmt);
     db.all(stmt, (err, user) => {
         if (err) {
-            return res.json({ success: false, message: err.message });
+            res.json({ success: false, message: err.message });
         }
         if (user) {
-            return res.json({ success: true, user: user[0] });
+            res.json({ success: true, user: user[0] });
         }
         else {
-            return res.json({ success: false, message: `User not found!` });
+            res.json({ success: false, message: `User not found!` });
         }
     })
 });
@@ -143,13 +144,13 @@ app.post('/view_trips', (req, res) => {
         var stmt = `SELECT * FROM trips LEFT JOIN boats ON trips.boat = boats.id LEFT JOIN crews ON trips.id = crews.trip_id LEFT JOIN members ON crews.member_id = members.id WHERE trips.departure >= ${current_dtm} ORDER BY crews.trip_id DESC LIMIT 20;`;
         db.all(stmt, (err, trips) => {
             if (err) {
-                return res.json(err.message);
+                res.json(err.message);
             }
             if (trips) {
-                return res.json({ success: true, trips });
+                res.json({ success: true, trips });
             }
             else {
-                return res.json({ success: false, message: `No trips found` });
+                res.json({ success: false, message: `No trips found` });
             };
         });
     }
@@ -157,15 +158,15 @@ app.post('/view_trips', (req, res) => {
         db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.trip_id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', req.body.id, function (err, trip) {
             if (err) {
                 console.log(`Error when requesting /view_trips with id ${id}`);
-                return res.json(err.message);
+                res.json(err.message);
             }
             if (trip) {
                 console.log(`Successfully requested /view_trips with id ${id}`);
-                return res.json({ success: true, trip });
+                res.json({ success: true, trip });
             }
             else {
                 console.log(`Successfully requested /view_trips with id ${id} but nothing found`);
-                return res.json({ success: false, message: `trip not found` });
+                res.json({ success: false, message: `trip not found` });
             };
         });
     }
@@ -199,7 +200,7 @@ app.post('/create_trip', async (req, res, next) => {
                 check = await db.runAsync(stmt);
                 console.log(check.changes);
             }
-            return res.json({ success: true, message: 'crew_check passed, trip inserted, crew assigned to trip' });
+            res.json({ success: true, message: 'crew_check passed, trip inserted, crew assigned to trip' });
         }
     }
 });
@@ -209,10 +210,10 @@ app.post('/join_trip', (req, res) => {
     console.log(stmt);
     db.run(stmt, (err) => {
         if (err) {
-            return res.json(err.message);
+            res.json(err.message);
         }
         else {
-            return res.json({ success: true, message: `successfully joined trip` });
+            res.json({ success: true, message: `successfully joined trip` });
         };
     });
 });
@@ -222,9 +223,9 @@ app.get('/get_boats', (req, res) => {
     console.log(stmt);
     db.all(stmt, (err, boat) => {
         if (err) {
-            return res.json(err.message);
+            res.json(err.message);
         }
-        return res.json(boat);
+        res.json(boat);
     });
 });
 
@@ -233,10 +234,10 @@ app.post('/create_boat', (req, res) => {
     console.log(stmt);
     db.run(stmt, (err) => {
         if (err) {
-            return res.json(err.message);
+            res.json(err.message);
         }
         else {
-            return res.json({ success: true, message: `successfluyy created new boat` });
+            res.json({ success: true, message: `successfluyy created new boat` });
         };
     });
 });
@@ -247,10 +248,10 @@ app.post('/start_trip', (req, res) => {
         console.log(stmt);
         db.run(stmt, (err) => {
             if (err) {
-                return res.json(err.message);
+                res.json(err.message);
             }
             else {
-                return res.json({ success: true, message: `successfully started trip` });
+                res.json({ success: true, message: `successfully started trip` });
             };
         });
     });
@@ -262,10 +263,10 @@ app.post('/end_trip', (req, res) => {
         console.log(stmt);
         db.run(stmt, (err, trip) => {
             if (err) {
-                return res.json(err.message);
+                res.json(err.message);
             }
             else {
-                return res.json({ success: true, message: `successfully stopped trip` });
+                res.json({ success: true, message: `successfully stopped trip` });
             };
         });
     });
