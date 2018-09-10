@@ -107,7 +107,7 @@ app.post('/register', async (req, res, next) => {
     if (check.length == 0) {
         stmt = `INSERT INTO members (username, first_name, last_name, password) VALUES ('${req.body.username}', '${req.body.first_name}', '${req.body.last_name}', '${req.body.password}');`;
         console.log(stmt);
-        await db.runAsync(stmt, (err) => {
+        db.run(stmt, (err) => {
             if (err) {
                 res.json(err.message);
             }
