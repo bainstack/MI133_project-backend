@@ -104,13 +104,10 @@ app.post('/register', async (req, res, next) => {
     var stmt = `SELECT * FROM members WHERE username = "${req.body.username}";`;
     console.log(stmt);
     var check = await db.allAsync(stmt);
-    if (check.length != 0) {
-        res.json({ success: false, message: `user ${req.body.username} already exists` });
-    }
-    else {
-        stmt = `INSERT INTO members (username, first_name, last_name, password) VALUES (${req.body.username}, ${req.body.first_name}, ${req.body.last_name}, ${req.body.password};`;
+    if (check.length == 0) {
+        stmt = `INSERT INTO members (username, first_name, last_name, password) VALUES ('${req.body.username}', '${req.body.first_name}', '${req.body.last_name}', '${req.body.password}');`;
         console.log(stmt);
-        db.run(stmt, (err) => {
+        await db.runAsync(stmt, (err) => {
             if (err) {
                 res.json(err.message);
             }
@@ -118,6 +115,9 @@ app.post('/register', async (req, res, next) => {
                 res.json({ success: true, message: `${req.body.username} successfully created` });
             }
         })
+    }
+    else if (check.length != 0) {
+        res.json({ success: false, message: `user ${req.body.username} already exists` });
     }
 });
 
