@@ -137,7 +137,7 @@ app.get('/logout', function (req, res) {
 });
 
 app.post('/view_trips', auth, function (req, res) {
-    if (req.body.id == "all" && req.session.admin == true) {
+    if (req.body.id == "all") {
         //var current_dtm = Math.floor((Date.now() / 1000) - 3600);
         var current_dtm = 1530000000;
         var stmt = `SELECT * FROM trips LEFT JOIN boats ON trips.boat = boats.id LEFT JOIN crews ON trips.id = crews.trip_id LEFT JOIN members ON crews.member_id = members.id WHERE trips.departure >= ${current_dtm} ORDER BY crews.trip_id DESC LIMIT 20;`;
