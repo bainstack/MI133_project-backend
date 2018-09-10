@@ -116,7 +116,7 @@ app.post('/register', async (req, res, next) => {
 });
 
 app.post('/login', (req, res) => {
-    var stmt = `SELECT id FROM members WHERE username = ${req.body.username};`;
+    var stmt = `SELECT id FROM members WHERE username = '${req.body.username}';`;
     console.log(stmt);
     db.all(stmt, (err, user) => {
         if (err) {
@@ -202,15 +202,12 @@ app.post('/create_trip', async (req, res, next) => {
 app.post('/join_trip', (req, res) => {
     var stmt = `INSERT INTO crews (trip_id, member_id) VALUES (${req.body.trip_id}, ${req.body.member_id});`;
     console.log(stmt);
-    db.run(stmt, (err, trip) => {
+    db.run(stmt, (err) => {
         if (err) {
             return res.json(err.message);
         }
-        if (trip) {
-            return res.json({ success: true, trip });
-        }
         else {
-            return res.json({ success: false, message: `couldn't join trip` });
+            return res.json({ success: true, message: `successfully joined trip` });
         };
     });
 });
