@@ -38,18 +38,16 @@ server.listen(port, () => console.log(`Listening on port ${port}`));
 
 passport.use(new LocalStrategy(
     (username, password, done) => {
-        db.get('SELECT * FROM members WHERE username == ? AND password == ?;', username, password, (err, user) => {
+        var stmt = `SELECT * FROM members WHERE username = ${username} AND password = ${password};`;
+        db.get(stmt, (err, user) => {
             //User.findOne({ username: username }, function (err, user) {
             if (err) {
-                console.log(err);
                 return done(err);
             }
             if (!user) {
-                console.log('Incorrect username.');
                 return done(null, false, { message: 'Incorrect username.' });
             }
             if (!password) {
-                console.log('Incorrect password.');
                 return done(null, false, { message: 'Incorrect password.' });
             }
             return done(null, user);
@@ -106,54 +104,46 @@ app.post('/register', async (req, res, next) => {
     var stmt = `SELECT * FROM members WHERE username = "${req.body.username}";`;
     console.log(stmt);
     var check = await db.allAsync(stmt);
-    console.log(check);
     if (check.length != 0) {
         res.json({ success: false, message: `user ${req.body.username} already exists` });
     }
     else {
-        console.log('registered ' + req.body.first_name + ' ' + req.body.last_name + ' as ' + req.body.username);
-        db.all('INSERT INTO members (username, first_name, last_name, password) VALUES (?, ?, ?, ?);', req.body.username, req.body.first_name, req.body.last_name, req.body.password);
-        console.log('Registered new user: ' + req.body.username);
-        return res.json({ success: true, message: `${req.body.username} successfully created` });
+        stmt = `INSERT INTO members (username, first_name, last_name, password) VALUES (${req.body.username}, ${req.body.first_name}, ${req.body.last_name}, ${req.body.password};`;
+        db.run(stmt, (err, row) => {
+            return res.json({ success: true, message: `${req.body.username} successfully created` });
+        })
     }
 });
 
 app.post('/login', (req, res) => {
-    console.log('User ' + req.body.username + ' connected');
-    db.all('SELECT id FROM members WHERE username = ?;', req.body.username, (err, user) => {
-        console.log(user);
+    var stmt = `SELECT id FROM members WHERE username = ${req.body.username};`;
+    console.log(stmt);
+    db.all(stmt, (err, user) => {
         if (err) {
-            console.log('User ' + req.body.username + ' connected');
             return res.json({ success: false, message: err.message });
         }
         if (user) {
-            console.log(`/login requested and user ${req.body.username} logged in!`);
             return res.json({ success: true, user: user[0] });
         }
         else {
-            console.log(`/login requested but user ${req.body.username} not found!`);
             return res.json({ success: false, message: `User not found!` });
         }
     })
 });
 
 app.post('/view_trips', (req, res) => {
-    console.log('view_trips called');
     if (req.body.id == "all") {
         //var current_dtm = Math.floor((Date.now() / 1000) - 3600);
         var current_dtm = 1530000000;
-        console.log(current_dtm);
-        db.all('SELECT * FROM trips LEFT JOIN boats ON trips.boat = boats.id LEFT JOIN crews ON trips.id = crews.trip_id LEFT JOIN members ON crews.member_id = members.id WHERE trips.departure >= ? ORDER BY crews.trip_id DESC LIMIT 20;', current_dtm, (err, trips) => {
+        var stmt = `SELECT * FROM trips LEFT JOIN boats ON trips.boat = boats.id LEFT JOIN crews ON trips.id = crews.trip_id LEFT JOIN members ON crews.member_id = members.id WHERE trips.departure >= ${current_dtm} ORDER BY crews.trip_id DESC LIMIT 20;`;
+        db.all(stmt, (err, trips) => {
             if (err) {
-                console.log('Error when requesting ALL /view_trips');
                 return res.json(err.message);
             }
             if (trips) {
-                console.log('Successfully requested /view_trips');
                 return res.json({ success: true, trips });
             }
             else {
-                console.log('/view_trips requested but no trips found');
                 return res.json({ success: false, message: `No trips found` });
             };
         });
@@ -210,7 +200,6 @@ app.post('/create_trip', async (req, res, next) => {
 });
 
 app.post('/join_trip', (req, res) => {
-    console.log(req.body);
     var stmt = `INSERT INTO crews (trip_id, member_id) VALUES (${req.body.trip_id}, ${req.body.member_id});`;
     console.log(stmt);
     db.run(stmt, (err, trip) => {
@@ -227,8 +216,9 @@ app.post('/join_trip', (req, res) => {
 });
 
 app.get('/get_boats', (req, res) => {
-    console.log('get_boats-route called');
-    db.all('SELECT * FROM boats;', (err, boat) => {
+    var stmt = `SELECT * FROM boats;`;
+    console.log(stmt);
+    db.all(stmt, (err, boat) => {
         if (err) {
             return res.json(err.message);
         }
@@ -237,8 +227,9 @@ app.get('/get_boats', (req, res) => {
 });
 
 app.post('/create_boat', (req, res) => {
-    console.log('requested /create_boat');
-    db.run('INSERT INTO boats (boat_name, boat_size) VALUES (?, ?);', req.body.boat_name, req.body.boat_size, (err, boat) => {
+    var stmt = `INSERT INTO boats (boat_name, boat_size) VALUES (${req.body.boat_name}, ${req.body.boat_size});`
+    console.log(stmt);
+    db.run(stmt, (err, boat) => {
         if (err) {
             return res.json(err.message);
         }
@@ -252,12 +243,10 @@ app.post('/create_boat', (req, res) => {
 });
 
 app.post('/start_trip', (req, res) => {
-    console.log(req.body);
     db.serialize(() => {
         var stmt = `UPDATE trips SET active = 1,  departure = '${req.body.departure}' WHERE id =${req.body.trip_id}`;
         console.log(stmt);
         db.run(stmt, (err, trip) => {
-            console.log(trip);
             if (err) {
                 return res.json(err.message);
             }
@@ -272,12 +261,10 @@ app.post('/start_trip', (req, res) => {
 });
 
 app.post('/end_trip', (req, res) => {
-    console.log(req.body);
     db.serialize(() => {
         var stmt = `UPDATE trips SET active = 0, arrival = '${req.body.arrival}' WHERE id =${req.body.trip_id}`;
         console.log(stmt);
         db.run(stmt, (err, trip) => {
-            console.log(trip);
             if (err) {
                 return res.json(err.message);
             }
