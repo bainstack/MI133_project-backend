@@ -2,7 +2,8 @@
 var express = require('express'),        // call express
     cors = require('cors'), // call cors to enable cross-origin fetching
     app = express(),                 // define our app using express
-    bodyParser = require('body-parser'),    // call body parser
+    bodyParser = require('body-parser'),    // call body-parser
+    cookieParser =  require('cookie-parser'); // call cookie-parser
     sqlite3 = require('sqlite3').verbose(), // call sqlite-database
     server = require('http').Server(app), // add http to the server
     session = require('express-session'), // add session middleware
@@ -17,11 +18,14 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+//configure app to use cookieParser
+app.use(cookieParser());
+
 app.use(session({
     store: new SQLiteStore,
     secret: 'MI_133_project-backend',
     cookie: { maxAge: 60 * 60 * 1000 }, // cookies last 1 hour
-    resave: true,
+    resave: false,
     saveUninitialized: true
 }));
 
@@ -105,16 +109,17 @@ app.post('/register', async (req, res, next) => {
 });
 
 app.post('/login', (req, res) => {
-    var stmt = `SELECT id, password FROM members WHERE username = '${req.body.username}' AND password = '${req.body.password};`;
+    var stmt = `SELECT id, password FROM members WHERE username = '${req.body.username}' AND password = '${req.body.password}';`;
     console.log(stmt);
     db.all(stmt, (err, user) => {
-        console.log
+        console.log(stmt);
         if (err) {
             res.json({ success: false, message: err.message });
         }
         if (user.length != 0) {
-            req.session.user_id = user[0].id;
-            res.json({ success: true, user: user[0] });
+            if (user)
+                req.session.user_id = user[0].id;
+            res.json({ success: true, user: user[0].id });
         }
         else {
             res.json({ success: false, message: `User not found!` });
@@ -243,7 +248,7 @@ app.post('/start_trip', auth, (req, res) => {
 app.post('/end_trip', auth, (req, res) => {
     var stmt = `UPDATE trips SET active = 2, arrival = '${req.body.arrival}' WHERE id =${req.body.trip_id}`;
     console.log(stmt);
-    db.run(stmt, (err, trip) => {
+    db.run(stmt, (err) => {
         if (err) {
             res.json(err.message);
         }
