@@ -209,8 +209,12 @@ app.post('/create_trip', async (req, res, next) => {
     }
 });
 
-app.post('/join trip', (req, res) => {
-    db.run('INSERT INTO crews (trip_id, member_id) VALUES (?, ?);', req.body.crew_id, req.body.member_id, (err, trip) => {
+app.post('/join_trip', (req, res) => {
+    console.log(req.body);
+    var stmt = `INSERT INTO crews (trip_id, member_id) VALUES (${req.body.trip_id}, ${req.body.member_id});`;
+    console.log(stmt);
+    db.run(stmt, (err, trip) => {
+        console.log(trip);
         if (err) {
             return res.json(err.message);
         }
