@@ -3,8 +3,8 @@ var express = require('express'),        // call express
     cors = require('cors'), // call cors to enable cross-origin fetching
     app = express(),                 // define our app using express
     bodyParser = require('body-parser'),    // call body-parser
-    cookieParser =  require('cookie-parser'); // call cookie-parser
-    sqlite3 = require('sqlite3').verbose(), // call sqlite-database
+    cookieParser = require('cookie-parser'); // call cookie-parser
+sqlite3 = require('sqlite3').verbose(), // call sqlite-database
     server = require('http').Server(app), // add http to the server
     session = require('express-session'), // add session middleware
     SQLiteStore = require('connect-sqlite3')(session), // add SQLiteStore to use it for session
@@ -45,8 +45,11 @@ server.listen(port, () => console.log(`Listening on port ${port}`));
 
 // Authentication and Authorization Middleware
 var auth = function (req, res, next) {
-    if (req.session && req.session.id)
+    if (req.session && req.session.id) return next();
+    else if (req.session && req.session) {
+        req.session.admin = true;
         return next();
+    }
     else
         return res.sendStatus(401);
 };
@@ -117,8 +120,8 @@ app.post('/login', (req, res) => {
             res.json({ success: false, message: err.message });
         }
         if (user.length != 0) {
-            if (user)
-                req.session.user_id = user[0].id;
+            if (user) req.session.user_id = user[0].id;
+            console.log(req.session);
             res.json({ success: true, user: user[0].id });
         }
         else {
@@ -127,8 +130,14 @@ app.post('/login', (req, res) => {
     })
 });
 
+// Logout endpoint
+app.get('/logout', function (req, res) {
+    req.session.destroy();
+    res.json({ message: "logout success!" });
+});
+
 app.post('/view_trips', auth, (req, res) => {
-    if (req.body.id == "all") {
+    if (req.body.id == "all" && req.session.admin == true) {
         //var current_dtm = Math.floor((Date.now() / 1000) - 3600);
         var current_dtm = 1530000000;
         var stmt = `SELECT * FROM trips LEFT JOIN boats ON trips.boat = boats.id LEFT JOIN crews ON trips.id = crews.trip_id LEFT JOIN members ON crews.member_id = members.id WHERE trips.departure >= ${current_dtm} ORDER BY crews.trip_id DESC LIMIT 20;`;
@@ -222,18 +231,21 @@ app.get('/get_boats', auth, (req, res) => {
 app.post('/create_boat', auth, (req, res) => {
     var stmt = `INSERT INTO boats (boat_name, boat_size) VALUES (${req.body.boat_name}, ${req.body.boat_size});`
     console.log(stmt);
-    db.run(stmt, (err) => {
-        if (err) {
-            res.json(err.message);
-        }
-        else {
-            res.json({ success: true, message: `successfluyy created new boat` });
-        };
-    });
+    if (req.session.admin == true) {
+        db.run(stmt, (err) => {
+            if (err) {
+                res.json(err.message);
+            }
+            else {
+                res.json({ success: true, message: `successfluyy created new boat` });
+            };
+        });
+    }
+    else res.sendStatus(401);
 });
 
 app.post('/start_trip', auth, (req, res) => {
-    var stmt = `UPDATE trips SET active = 1,  departure = '${req.body.departure}' WHERE id =${req.body.trip_id};`;
+    var stmt = `UPDATE trips SET active = 1, departure = '${req.body.departure}' WHERE id =${req.body.trip_id};`;
     console.log(stmt);
     db.run(stmt, (err) => {
         if (err) {
