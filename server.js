@@ -105,11 +105,11 @@ app.post('/register', async (req, res, next) => {
     console.log(stmt);
     var check = await db.allAsync(stmt);
     if (check.length != 0) {
-        console.log('check failed');
         res.json({ success: false, message: `user ${req.body.username} already exists` });
     }
     else {
         stmt = `INSERT INTO members (username, first_name, last_name, password) VALUES (${req.body.username}, ${req.body.first_name}, ${req.body.last_name}, ${req.body.password};`;
+        console.log(stmt);
         db.run(stmt, (err) => {
             if (err) {
                 res.json(err.message);
