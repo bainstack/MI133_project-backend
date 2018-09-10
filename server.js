@@ -120,7 +120,7 @@ app.post('/register', async (req, res, next) => {
 
 app.post('/login', (req, res) => {
     console.log('User ' + req.body.username + ' connected');
-    db.all('SELECT id FROM members WHERE username = "?";', req.body.username, (err, user) => {
+    db.all('SELECT id FROM members WHERE username = ?;', req.body.username, (err, user) => {
         console.log(user);
         if (err) {
             console.log('User ' + req.body.username + ' connected');
