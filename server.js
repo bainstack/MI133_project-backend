@@ -1,26 +1,29 @@
 // call needed packages
-let express = require('express'),        // call express
+var express = require('express'),        // call express
     cors = require('cors'), // call cors to enable cross-origin fetching
     app = express(),                 // define our app using express
-    cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),    // call body parser
     sqlite3 = require('sqlite3').verbose(), // call sqlite-database
     server = require('http').Server(app), // add http to the server
-    passport = require('passport'), LocalStrategy = require('passport-local').Strategy, // call passport with local strategy for usage of db-entries
+    session = require('express-session'), // add session middleware
+    SQLiteStore = require('connect-sqlite3')(session), // add SQLiteStore to use it for session
     path = require('path') //use path module for cross-os-usage of nodejs app
     ;
 
 // configure app to enable cors
 app.use(cors());
 
-app.use(cookieParser());
 // configure app to use bodyParser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// configure app to use passport
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(session({
+    store: new SQLiteStore,
+    secret: 'MI_133_project-backend',
+    cookie: { maxAge: 60 * 60 * 1000 }, // cookies last 1 hour
+    resave: true,
+    saveUninitialized: true
+}));
 
 // set port
 const port = 3000;
@@ -30,39 +33,19 @@ let db = new sqlite3.Database(db_path, (err) => {
     if (err) {
         return console.error(err.message);
     }
-    console.log('Connected to the logbook SQlite database.');
+    console.log('Connected to the logbook SQLite database.');
 });
 
 // start server
 server.listen(port, () => console.log(`Listening on port ${port}`));
 
-passport.use(new LocalStrategy(
-    (username, password, done) => {
-        var stmt = `SELECT * FROM members WHERE username = ${username} AND password = ${password};`;
-        db.get(stmt, (err, user) => {
-            //User.findOne({ username: username }, function (err, user) {
-            if (err) {
-                return done(err);
-            }
-            if (!user) {
-                return done(null, false, { message: 'Incorrect username.' });
-            }
-            if (!password) {
-                return done(null, false, { message: 'Incorrect password.' });
-            }
-            return done(null, user);
-        });
-    }
-));
-
-passport.serializeUser(function (user, done) {
-    done(null, user);
-});
-
-passport.deserializeUser(function (user, done) {
-    done(null, user);
-});
-
+// Authentication and Authorization Middleware
+var auth = function (req, res, next) {
+    if (req.session && req.session.id)
+        return next();
+    else
+        return res.sendStatus(401);
+};
 
 db.getAsync = function (sql) {
     var that = this;
@@ -122,13 +105,15 @@ app.post('/register', async (req, res, next) => {
 });
 
 app.post('/login', (req, res) => {
-    var stmt = `SELECT id FROM members WHERE username = '${req.body.username}';`;
+    var stmt = `SELECT id, password FROM members WHERE username = '${req.body.username}' AND password = '${req.body.password};`;
     console.log(stmt);
     db.all(stmt, (err, user) => {
+        console.log
         if (err) {
             res.json({ success: false, message: err.message });
         }
-        if (user) {
+        if (user.length != 0) {
+            req.session.user_id = user[0].id;
             res.json({ success: true, user: user[0] });
         }
         else {
@@ -137,7 +122,7 @@ app.post('/login', (req, res) => {
     })
 });
 
-app.post('/view_trips', (req, res) => {
+app.post('/view_trips', auth, (req, res) => {
     if (req.body.id == "all") {
         //var current_dtm = Math.floor((Date.now() / 1000) - 3600);
         var current_dtm = 1530000000;
@@ -172,7 +157,7 @@ app.post('/view_trips', (req, res) => {
     }
 });
 
-app.post('/create_trip', async (req, res, next) => {
+app.post('/create_trip', auth, async (req, res, next) => {
     var stmt;
     var check = true;
     var memberID;
@@ -205,7 +190,7 @@ app.post('/create_trip', async (req, res, next) => {
     }
 });
 
-app.post('/join_trip', (req, res) => {
+app.post('/join_trip', auth, (req, res) => {
     var stmt = `INSERT INTO crews (trip_id, member_id) VALUES (${req.body.trip_id}, ${req.body.member_id});`;
     console.log(stmt);
     db.run(stmt, (err) => {
@@ -218,7 +203,7 @@ app.post('/join_trip', (req, res) => {
     });
 });
 
-app.get('/get_boats', (req, res) => {
+app.get('/get_boats', auth, (req, res) => {
     var stmt = `SELECT * FROM boats;`;
     console.log(stmt);
     db.all(stmt, (err, boat) => {
@@ -229,7 +214,7 @@ app.get('/get_boats', (req, res) => {
     });
 });
 
-app.post('/create_boat', (req, res) => {
+app.post('/create_boat', auth, (req, res) => {
     var stmt = `INSERT INTO boats (boat_name, boat_size) VALUES (${req.body.boat_name}, ${req.body.boat_size});`
     console.log(stmt);
     db.run(stmt, (err) => {
@@ -242,7 +227,7 @@ app.post('/create_boat', (req, res) => {
     });
 });
 
-app.post('/start_trip', (req, res) => {
+app.post('/start_trip', auth, (req, res) => {
     var stmt = `UPDATE trips SET active = 1,  departure = '${req.body.departure}' WHERE id =${req.body.trip_id};`;
     console.log(stmt);
     db.run(stmt, (err) => {
@@ -255,8 +240,8 @@ app.post('/start_trip', (req, res) => {
     });
 });
 
-app.post('/end_trip', (req, res) => {
-    var stmt = `UPDATE trips SET active = 0, arrival = '${req.body.arrival}' WHERE id =${req.body.trip_id}`;
+app.post('/end_trip', auth, (req, res) => {
+    var stmt = `UPDATE trips SET active = 2, arrival = '${req.body.arrival}' WHERE id =${req.body.trip_id}`;
     console.log(stmt);
     db.run(stmt, (err, trip) => {
         if (err) {
