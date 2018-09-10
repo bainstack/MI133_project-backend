@@ -243,31 +243,27 @@ app.post('/create_boat', (req, res) => {
 });
 
 app.post('/start_trip', (req, res) => {
-    db.serialize(() => {
-        var stmt = `UPDATE trips SET active = 1,  departure = '${req.body.departure}' WHERE id =${req.body.trip_id};`;
-        console.log(stmt);
-        db.run(stmt, (err) => {
-            if (err) {
-                res.json(err.message);
-            }
-            else {
-                res.json({ success: true, message: `successfully started trip` });
-            };
-        });
+    var stmt = `UPDATE trips SET active = 1,  departure = '${req.body.departure}' WHERE id =${req.body.trip_id};`;
+    console.log(stmt);
+    db.run(stmt, (err) => {
+        if (err) {
+            res.json(err.message);
+        }
+        else {
+            res.json({ success: true, message: `successfully started trip` });
+        };
     });
 });
 
 app.post('/end_trip', (req, res) => {
-    db.serialize(() => {
-        var stmt = `UPDATE trips SET active = 0, arrival = '${req.body.arrival}' WHERE id =${req.body.trip_id}`;
-        console.log(stmt);
-        db.run(stmt, (err, trip) => {
-            if (err) {
-                res.json(err.message);
-            }
-            else {
-                res.json({ success: true, message: `successfully stopped trip` });
-            };
-        });
+    var stmt = `UPDATE trips SET active = 0, arrival = '${req.body.arrival}' WHERE id =${req.body.trip_id}`;
+    console.log(stmt);
+    db.run(stmt, (err, trip) => {
+        if (err) {
+            res.json(err.message);
+        }
+        else {
+            res.json({ success: true, message: `successfully stopped trip` });
+        };
     });
 });
