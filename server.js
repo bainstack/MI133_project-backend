@@ -105,12 +105,17 @@ app.post('/register', async (req, res, next) => {
     console.log(stmt);
     var check = await db.allAsync(stmt);
     if (check.length != 0) {
-        res.json({ success: false, message: `user ${req.body.username} already exists` });
+        return res.json({ success: false, message: `user ${req.body.username} already exists` });
     }
     else {
         stmt = `INSERT INTO members (username, first_name, last_name, password) VALUES (${req.body.username}, ${req.body.first_name}, ${req.body.last_name}, ${req.body.password};`;
-        db.run(stmt, (err, row) => {
-            return res.json({ success: true, message: `${req.body.username} successfully created` });
+        db.run(stmt, (err) => {
+            if (err) {
+                return res.json(err.message);
+            }
+            else {
+                return res.json({ success: true, message: `${req.body.username} successfully created` });
+            }
         })
     }
 });
@@ -194,7 +199,7 @@ app.post('/create_trip', async (req, res, next) => {
                 check = await db.runAsync(stmt);
                 console.log(check.changes);
             }
-            res.json({ success: true, message: 'crew_check passed, trip inserted, crew assigned to trip' });
+            return res.json({ success: true, message: 'crew_check passed, trip inserted, crew assigned to trip' });
         }
     }
 });
@@ -226,32 +231,26 @@ app.get('/get_boats', (req, res) => {
 app.post('/create_boat', (req, res) => {
     var stmt = `INSERT INTO boats (boat_name, boat_size) VALUES (${req.body.boat_name}, ${req.body.boat_size});`
     console.log(stmt);
-    db.run(stmt, (err, boat) => {
+    db.run(stmt, (err) => {
         if (err) {
             return res.json(err.message);
         }
-        if (boat) {
-            return res.json({ success: true, boat });
-        }
         else {
-            return res.json({ success: false, message: `boat couldn't get created` });
+            return res.json({ success: true, message: `successfluyy created new boat` });
         };
     });
 });
 
 app.post('/start_trip', (req, res) => {
     db.serialize(() => {
-        var stmt = `UPDATE trips SET active = 1,  departure = '${req.body.departure}' WHERE id =${req.body.trip_id}`;
+        var stmt = `UPDATE trips SET active = 1,  departure = '${req.body.departure}' WHERE id =${req.body.trip_id};`;
         console.log(stmt);
-        db.run(stmt, (err, trip) => {
+        db.run(stmt, (err) => {
             if (err) {
                 return res.json(err.message);
             }
-            if (trip) {
-                return res.json({ success: true, trip });
-            }
             else {
-                return res.json({ success: false, message: `couldn't start trip` });
+                return res.json({ success: true, message: `successfully started trip` });
             };
         });
     });
@@ -265,11 +264,8 @@ app.post('/end_trip', (req, res) => {
             if (err) {
                 return res.json(err.message);
             }
-            if (trip) {
-                return res.json({ success: true, trip });
-            }
             else {
-                return res.json({ success: false, message: `couldn't stop trip` });
+                return res.json({ success: true, message: `successfully stopped trip` });
             };
         });
     });
