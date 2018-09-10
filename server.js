@@ -136,7 +136,7 @@ app.get('/logout', function (req, res) {
     res.json({ message: "logout success!" });
 });
 
-app.post('/view_trips', auth, (req, res) => {
+app.post('/view_trips', auth, function (req, res) {
     if (req.body.id == "all" && req.session.admin == true) {
         //var current_dtm = Math.floor((Date.now() / 1000) - 3600);
         var current_dtm = 1530000000;
@@ -153,19 +153,17 @@ app.post('/view_trips', auth, (req, res) => {
             };
         });
     }
-    else {
-        db.all('SELECT * FROM trips, crews, boats, members WHERE (trips.id = ?) AND (trips.crew = crews.trip_id) AND (crews.member_id = members.id) AND (trips.boat = boats.id) ORDER BY trips.departure;', req.body.id, function (err, trip) {
+    else if (req.session.admin == true) {
+        var stmt = `SELECT * FROM trips LEFT JOIN boats ON trips.boat = boats.id LEFT JOIN crews ON trips.id = crews.trip_id LEFT JOIN members ON crews.member_id = members.id ORDER BY crews.trip_id;`;
+        db.all(stmt, function (err, trips) {
             if (err) {
-                console.log(`Error when requesting /view_trips with id ${id}`);
                 res.json(err.message);
             }
-            if (trip) {
-                console.log(`Successfully requested /view_trips with id ${id}`);
-                res.json({ success: true, trip });
+            if (trips) {
+                res.json({ success: true, trips });
             }
             else {
-                console.log(`Successfully requested /view_trips with id ${id} but nothing found`);
-                res.json({ success: false, message: `trip not found` });
+                res.json({ success: false, message: `no trips found` });
             };
         });
     }
