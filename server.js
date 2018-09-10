@@ -214,7 +214,6 @@ app.post('/join_trip', (req, res) => {
     var stmt = `INSERT INTO crews (trip_id, member_id) VALUES (${req.body.trip_id}, ${req.body.member_id});`;
     console.log(stmt);
     db.run(stmt, (err, trip) => {
-        console.log(trip);
         if (err) {
             return res.json(err.message);
         }
@@ -255,7 +254,7 @@ app.post('/create_boat', (req, res) => {
 app.post('/start_trip', (req, res) => {
     console.log(req.body);
     db.serialize(() => {
-        var stmt = `UPDATE trips SET departure = '${req.body.departure}' WHERE id =${req.body.trip_id}`;
+        var stmt = `UPDATE trips SET active = 1,  departure = '${req.body.departure}' WHERE id =${req.body.trip_id}`;
         console.log(stmt);
         db.run(stmt, (err, trip) => {
             console.log(trip);
@@ -275,7 +274,7 @@ app.post('/start_trip', (req, res) => {
 app.post('/end_trip', (req, res) => {
     console.log(req.body);
     db.serialize(() => {
-        var stmt = `UPDATE trips SET arrival = '${req.body.arrival}' WHERE id =${req.body.trip_id}`;
+        var stmt = `UPDATE trips SET active = 0, arrival = '${req.body.arrival}' WHERE id =${req.body.trip_id}`;
         console.log(stmt);
         db.run(stmt, (err, trip) => {
             console.log(trip);
