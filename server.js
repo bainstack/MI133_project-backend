@@ -251,3 +251,43 @@ app.post('/create_boat', (req, res) => {
         };
     });
 });
+
+app.post('/start_trip', (req, res) => {
+    console.log(req.body);
+    db.serialize(() => {
+        var stmt = `UPDATE trips SET departure = '${req.body.departure}' WHERE id =${req.body.trip_id}`;
+        console.log(stmt);
+        db.run(stmt, (err, trip) => {
+            console.log(trip);
+            if (err) {
+                return res.json(err.message);
+            }
+            if (trip) {
+                return res.json({ success: true, trip });
+            }
+            else {
+                return res.json({ success: false, message: `couldn't start trip` });
+            };
+        });
+    });
+});
+
+app.post('/end_trip', (req, res) => {
+    console.log(req.body);
+    db.serialize(() => {
+        var stmt = `UPDATE trips SET arrival = '${req.body.arrival}' WHERE id =${req.body.trip_id}`;
+        console.log(stmt);
+        db.run(stmt, (err, trip) => {
+            console.log(trip);
+            if (err) {
+                return res.json(err.message);
+            }
+            if (trip) {
+                return res.json({ success: true, trip });
+            }
+            else {
+                return res.json({ success: false, message: `couldn't stop trip` });
+            };
+        });
+    });
+});
